@@ -3,15 +3,14 @@
 
 import subprocess as sp
 
-def gitconfig(name=''):
+def git():
+    d = {}
     rawstrs = sp.Popen(['git', 'config', '-l'], stdout=sp.PIPE).communicate()[0].split('\n')
-    configstrs = [x.split('.', 1) for x in filter(None, rawstrs)]
-    print configstrs
-    if name:
-        configstrs = filter(lambda x: x[0] == name, configstrs)
-        return dict(x[1].split('=', 1) for x in configstrs)
-    else:
-        configdict = {}
-        for k, v in configstrs:
-            configdict.setdefault(k, {}).update((v.split('=', 1),))
-        return configdict
+    configstrs = [x.split('=', 1) for x in filter(None, rawstrs)]
+    for kstr, v in configstrs:
+        keys = kstr.split('.')
+        nd = d
+        for k in keys[:-1]:
+            nd = nd.setdefault(k, {})
+        nd[keys[-1]] = v
+    return d
