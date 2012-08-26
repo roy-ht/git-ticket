@@ -3,12 +3,15 @@
 
 import sys
 import github
+from gitticket import config
 
 def show(opts):
     pass
 
 def list(opts):
-    pass
+    cfg = config.parseconfig()
+    r = github.issues(cfg)
+    print r
 
 def mine(opts):
     pass
