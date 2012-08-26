@@ -29,7 +29,7 @@ def is_inside_work_tree():
 def git_dir():
     if not is_inside_work_tree():
         return None
-    return os.path.abspath(cmd_stdout(('git', 'rev-parse', '-q', '--git-dir')))[:-4] # 必ずついてる末尾の.gitを削除
+    return os.path.normpath(os.path.join(os.path.abspath(cmd_stdout(('git', 'rev-parse', '-q', '--git-dir'))), '..')) # .gitの一つ上
 
 def guess_repo_name():
     return os.path.basename(git_dir())
