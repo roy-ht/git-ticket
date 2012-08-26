@@ -13,8 +13,10 @@ def main():
     psr_add = subpsr.add_parser('add', help='')
     psr_update = subpsr.add_parser('update', help='')
     psr_local = subpsr.add_parser('local', help='')
+    psr_github_auth = subpsr.add_parser('github-authorize', help='')
     #
     psr_help.set_defaults(cmd=lambda x: psr.print_help())
+    psr_github_auth.set_defaults(cmd=cmd.github_auth)
     psr_show.set_defaults(cmd=cmd.show)
     psr_list.set_defaults(cmd=cmd.list)
     psr_mine.set_defaults(cmd=cmd.mine)
