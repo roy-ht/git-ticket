@@ -29,7 +29,10 @@ def local(opts):
     pass
 
 def github_auth(opts):
-    r = github.authorize()
+    import getpass
+    cfg = config.parseconfig()
+    pswd = getpass.getpass('github password for {0}: '.format(cfg['name']))
+    r = github.authorize(cfg['name'], pswd)
     if 'message' in r:
         sys.exit(r['message'])
     print 'You got an access token: {0}'.format(r['token'])
