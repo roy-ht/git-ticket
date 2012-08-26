@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 # -*- coding:utf-8 -*-
 
+import sys
+import github
+
 def show(opts):
     pass
 
@@ -21,3 +24,10 @@ def update(opts):
 
 def local(opts):
     pass
+
+def github_auth(opts):
+    r = github.authorize()
+    if 'message' in r:
+        sys.exit(r['message'])
+    print 'You got an access token: {0}'.format(r['token'])
+    print 'If you want to set global, type:\ngit config --global ticket.github.token {0}'.format(r['token'])
