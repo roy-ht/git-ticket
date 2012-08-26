@@ -5,6 +5,7 @@ def main():
     from gitticket import cmd
     psr = argparse.ArgumentParser(description='Welcome to git-ticket!!')
     subpsr = psr.add_subparsers(help='commands')
+    psr_help = subpsr.add_parser('help', help='Show this message.')
     psr_show = subpsr.add_parser('show', help='')
     psr_list = subpsr.add_parser('list', help='')
     psr_mine = subpsr.add_parser('mine', help='')
@@ -13,6 +14,7 @@ def main():
     psr_update = subpsr.add_parser('update', help='')
     psr_local = subpsr.add_parser('local', help='')
     #
+    psr_help.set_defaults(cmd=lambda x: psr.print_help())
     psr_show.set_defaults(cmd=cmd.show)
     psr_list.set_defaults(cmd=cmd.list)
     psr_mine.set_defaults(cmd=cmd.mine)
