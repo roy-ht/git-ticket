@@ -4,7 +4,6 @@ def main():
     import argparse
     from gitticket import cmd
     psr = argparse.ArgumentParser(description='Welcome to git-ticket!!')
-    psr.set_defaults(cmd=cmd.list)
     subpsr = psr.add_subparsers(help='commands')
     psr_show = subpsr.add_parser('show', help='')
     psr_list = subpsr.add_parser('list', help='')
