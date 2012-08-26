@@ -7,6 +7,9 @@ def show(opts):
 def list(opts):
     pass
 
+def mine(opts):
+    pass
+
 def commit(opts):
     pass
 
