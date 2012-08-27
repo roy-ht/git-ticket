@@ -1,38 +1,86 @@
 #!/usr/bin/env python
 # -*- coding:utf-8 -*-
 
+import operator as opr
+import itertools as itrt
 from gitticket.config import nested_access
 import blessings
+
+class Table(object):
+    def __init__(self):
+        self.colcfg = {}
+        self.lines = []
+        self.reducename = None
+        self.margin = 2
+    
+    def addcolumn(self, name, **kwargs):
+        kwargs['__ord__'] = len(self.colcfg)
+        self.colcfg[name] = kwargs
+
+    def addjson(self, j):
+        u"""jsonを渡すことにより、それぞれのコラムのkeyに対応して
+        抜き出して文字列リストにする
+        """
+        l = []
+        for col in sorted(self.colcfg.values(), key=opr.itemgetter('__ord__')):
+            l.append(unicode(nested_access(j, col['key'], col.get('default', None))))
+        self.lines.append(l)
+
+    def fit(self):
+        for name, col in self.colcfg.items():
+            col['width'] = max(self.stringwidth(x[col['__ord__']]) for x in self.lines)
+            col['width'] = max(col['width'], self.stringwidth(name))
+        if self.reducename:
+            totwidth = sum(x['width'] for x in self.colcfg.values())
+            deltawidth = totwidth - termwidth()
+            if deltawidth > 0:
+                self.colcfg[self.reducename]['width'] = max(self.colcfg[self.reducename]['width'] - deltawidth, self.stringwidth(self.reducename))
+        
+    def stringwidth(self, s):
+        return sum(1 if ord(x) < 256 else 2 for x in s)
+
+    def output(self):
+        r = u''
+        for name, col in sorted(self.colcfg.items(), key=lambda x: x[1]['__ord__']):
+            gluelen = col['width'] - self.stringwidth(name)
+            r += name + u' ' * (gluelen + self.margin)
+        r += u'\n'
+        for name, col in sorted(self.colcfg.items(), key=lambda x: x[1]['__ord__']):
+            gluelen = col['width'] - self.stringwidth(name)
+            r += u'-' * (len(name) + gluelen) + u' ' * self.margin
+        r += u'\n'
+        for line in self.lines:
+            for col, t in itrt.izip(sorted(self.colcfg.values(), key=opr.itemgetter('__ord__')), line):
+                gluelen = col['width'] - self.stringwidth(t)
+                if gluelen >= 0:
+                    r += t
+                else:
+                    for i in range(1, len(t) + 1):
+                        gluelen = col['width'] - self.stringwidth(t[:-i]) - 2
+                        if gluelen >= 0:
+                            r += t[:-i] + u'..'
+                            break
+                r += u' ' * (gluelen + self.margin)
+            r += u'\n'
+        return r
+
+
+def termwidth():
+    term = blessings.Terminal()
+    return term.width
+        
 
 def json(jsonlist, stgs):
     u"""stgに入っている情報を元にフォーマットして返す
     stgはリストで、その順番でコラムを作って返す
     """
-    term = blessings.Terminal()
-    # itemは縦に詰まって行く。列ベースでフォーマットする
-    columns = [[x.get('name', x['key'])] for x in stgs]
+    t = Table()
+    for stg in stgs:
+        t.addcolumn(stg.get('name', stg['key']), key=stg['key'])
     for j in jsonlist:
-        for idx, stg in enumerate(stgs):
-            columns[idx].append(str(nested_access(j, stg['key'])))
-    # すべての要素が入ったのでフォーマット
-    widths = [max(map(len, x)) + 2 for x in columns]
-    totalwidth = sum(widths)
-    if totalwidth > term.width:
-        for idx, stg in enumerate(stgs):
-            if stg.get('trunc', False):
-                # headerの文字数よりは小さくならない
-                widths[idx] = max(len(columns[idx][0]) + 2, totalwidth - term.width)
-                for i, content in enumerate(columns[idx]):
-                    if len(content) > widths[idx]:
-                        columns[idx][i] = columns[idx][i][:widths[idx] - 2] + '..'
-                break
-    # width formatting
-    width_formats = ['{{:<{0}}}'.format(x) for x in widths]
-    txt = ''
-    for i in range(len(jsonlist) + 1):
-        for ci, column in enumerate(columns):
-            txt += width_formats[ci].format(column[i])
-        txt += '\n'
-        if i == 0:
-            txt += '-' * sum(widths) + '\n'
-    return txt
+        t.addjson(j)
+    t.reducename = 'title'
+    t.fit()
+    return t.output()
+    
+    
