@@ -8,4 +8,5 @@ setup(name="gitticket",
       url='https://www.github.com/aflc/git-ticket',
       packages=['gitticket'],
       entry_points=dict(console_scripts=['git-ticket=gitticket:main']),
+      install_requires=['blessings'],
       zip_safe=False)
