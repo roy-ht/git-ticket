@@ -15,7 +15,7 @@ def list(opts):
     print display.json(r, [{'key':'number', 'name':'id'},
                          {'key':'state'},
                          {'key':'title', 'trunc':True},
-                         {'key':'assignee.login', 'name':'assignee'},
+                         {'key':'assignee.login', 'name':'assign', 'default':'No one'},
                          {'key':'comments', 'name':'c'},
                          {'key':'created_at', 'name':'create'},
                          {'key':'updated_at', 'name':'update'},
