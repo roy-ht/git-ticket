@@ -8,10 +8,12 @@ import sys
 def cmd_stdout(arglist):
     return sp.Popen(arglist, stdout=sp.PIPE).communicate()[0].strip()
 
-def nested_access(d, keystr):
+def nested_access(d, keystr, default=None):
     keys = keystr.split('.')
     tgt = d
     for k in keys:
+        if not tgt or k not in tgt:
+            return default
         tgt = tgt[k]
     return tgt
 
