@@ -8,6 +8,13 @@ import sys
 def cmd_stdout(arglist):
     return sp.Popen(arglist, stdout=sp.PIPE).communicate()[0].strip()
 
+def nested_access(d, keystr):
+    keys = keystr.split('.')
+    tgt = d
+    for k in keys:
+        tgt = tgt[k]
+    return tgt
+
 def conftodict(config):
     d = {}
     for kstr, v in config.items():
