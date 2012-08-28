@@ -45,3 +45,21 @@ def issues(cfg, params={}):
         tickets.append(t)
     return tickets
     
+def issue(cfg, number, params={}):
+    url = ISSUE.format(issueid=number, **cfg)
+    if 'gtoken' in cfg:
+        params['access_token'] = cfg['gtoken']
+    j = requests.get(url, params=params).json
+    create = datetime.datetime.strptime(j['created_at'].replace('Z', 'UTC'), DATEFMT) if j['created_at'] else None
+    update = datetime.datetime.strptime(j['updated_at'].replace('Z', 'UTC'), DATEFMT) if j['updated_at'] else None
+    closed = datetime.datetime.strptime(j['closed_at'].replace('Z', 'UTC'), DATEFMT) if j['closed_at'] else None
+    tic = ticket.Ticket({'id':j['number'],
+                            'state':j['state'],
+                            'title':j['title'],
+                            'assign':nested_access(j, 'assignee.login'),
+                            'commentnum':j['comments'],
+                            'create':create,
+                            'update':update,
+                            'closed':closed})
+    return tic
+    
