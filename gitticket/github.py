@@ -31,7 +31,6 @@ def authorize(name, pswd):
     return r.json
 
 def issues(cfg, params={}):
-    u"""name, repoが含まれる辞書"""
     url = ISSUES.format(**cfg)
     if 'gtoken' in cfg:
         params['access_token'] = cfg['gtoken']
