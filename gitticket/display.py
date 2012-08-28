@@ -42,7 +42,7 @@ def termwidth():
     return term.width
 
 
-def ticket(tickets):
+def ticketlist(tickets):
     u"""Ticketオブジェクトのリストを表示する"""
     t = Table(tickets)
     for name in ('id', 'title', 'assign', 'c', 'create', 'update'):
