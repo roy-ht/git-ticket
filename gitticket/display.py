@@ -25,34 +25,46 @@ class Table(object):
                 self.colcfg[self.reducename]['width'] = max(self.colcfg[self.reducename]['width'] - deltawidth, util.strwidth(self.reducename))
         
     def output(self):
+        term = blessings.Terminal()
         lines = [[], []]
         for col in self.colcfg:
             gluelen = col['width'] - util.strwidth(col['name'])
             lines[0].append(col['name'] + u' ' * gluelen)
-            lines[1].append(u'-' * (len(col['name']) + gluelen))
+            lines[1].append(term.bold(u'-' * (len(col['name']) + gluelen)))
         for ticket in self.tickets:
-            lines.append([ticket.tostr(x['name'], x['width']) for x in self.colcfg])
+            line = []
+            for col in self.colcfg:
+                txt = ticket.tostr(col['name'], col['width'])
+                if 'color' in col:
+                    txt = getattr(term, col['color'])(txt)
+                line.append(txt)
+            lines.append(line)
         return u'\n'.join((u' ' * self.margin).join(x) for x in lines)
 
 
 def ticketlist(tickets):
     u"""Ticketオブジェクトのリストを表示する"""
     t = Table(tickets)
-    for name in ('id', 'title', 'assign', 'c', 'create', 'update'):
-        if all(getattr(x, name, None) is not None for x in tickets):
-            t.addcolumn({'name':name})
+    for colcfg in ({'name':'id', 'color':'green'}, {'name':'state', 'color':'cyan'},
+                   {'name':'title'}, {'name':'assign', 'color':'magenta'},
+                   {'name':'c'}, {'name':'create'}, {'name':'update'}):
+        if all(getattr(x, colcfg['name'], None) is not None for x in tickets):
+            t.addcolumn(colcfg)
     t.reducename = 'title'
     t.fit()
     return t.output()
             
 def ticketdetail(tic):
+    term = blessings.Terminal()
     r = u'\n'
-    r += u'#{0.id} [{0.state}] by {0.created_by} {0.create} with {0.c} comments\n'.format(tic)
+    r += u'[{term.cyan}{tic.state}{term.normal}] {term.green}#{tic.id}{term.normal} created by {term.magenta}{tic.created_by}{term.normal} at {tic.create}, {tic.c} comments, updated at {tic.update}\n'.format(tic=tic, term=term)
     r += horline(u'=') + u'\n'
-    r += u'[Title]  {0.title}\n'.format(tic)
-    r += u'[Update] {0.update}\n'.format(tic)
+    r += u'[Title]  {tic.title}\n'.format(tic=tic)
+    r += u'[Assign] {term.magenta}{tic.assign}{term.normal}\n'.format(tic=tic, term=term)
     if tic.labels:
         r += u'[Labels] {0}\n'.format(u', '.join(tic.labels))
+    if tic.state == 'closed':
+        r += u'[Closed] at {tic.closed}\n'.format(tic=tic)
     r += '\n'
     r += tic.body + u'\n'
     r += '\n'
