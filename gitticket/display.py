@@ -47,15 +47,21 @@ def ticketlist(tickets):
             
 def ticketdetail(tic):
     r = u'\n'
-    r += u'[{state}] #{id} {title}\n'.format(state=tic.state, id=tic.id, title=tic.title)
-    r += horline() + u'\n'
-    r += u'By {created_by} {create} with {commentnum} comments\n'.format(created_by=tic.created_by, create=tic.create, commentnum=tic.c)
-    r += u'Updated at: {update}\n'.format(update=tic.update)
+    r += u'#{0.id} [{0.state}] by {0.created_by} {0.create} with {0.c} comments\n'.format(tic)
+    r += horline(u'=') + u'\n'
+    r += u'[Title]  {0.title}\n'.format(tic)
+    r += u'[Update] {0.update}\n'.format(tic)
     if tic.labels:
-        r += u'Labels: {labels}\n'.format(labels=u', '.join(tic.labels))
+        r += u'[Labels] {0}\n'.format(u', '.join(tic.labels))
     r += '\n'
-    r += tic.body
-    
+    r += tic.body + u'\n'
+    r += '\n'
+    for comment in tic.comments:
+        r += u'#{0.id} {0.created_by} commented at {0.create}\n'.format(comment)
+        r += horline() + '\n'
+        r += comment.body + '\n'
+        r += '\n'
+
     return r
 
 
