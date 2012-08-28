@@ -45,6 +45,18 @@ def ticketlist(tickets):
     t.fit()
     return t.output()
             
+def ticketdetail(tic):
+    r = u'\n'
+    r += u'[{state}] #{id} {title}\n'.format(state=tic.state, id=tic.id, title=tic.title)
+    r += horline() + u'\n'
+    r += u'By {created_by} {create} with {commentnum} comments\n'.format(created_by=tic.created_by, create=tic.create, commentnum=tic.c)
+    r += u'Updated at: {update}\n'.format(update=tic.update)
+    if tic.labels:
+        r += u'Labels: {labels}\n'.format(labels=u', '.join(tic.labels))
+    r += '\n'
+    r += tic.body
+    
+    return r
 
 
 def termwidth():
