@@ -5,6 +5,26 @@ import time
 import calendar
 from gitticket import util
 
+class Comment(object):
+    def __init__(self, dct):
+        self.id = dct['id']
+        self.body = dct['body']
+        self.created_by = dct['created_by']
+        self.create = dct['create'] # datetime
+        self.update = dct['update'] # datetime
+        self.body = dct['body']
+
+        self._format()
+
+    def __getitem__(self, name):
+        return getattr(self, name)
+
+    def _format(self):
+        self.id = str(self.id)
+        self.create = humandate(self.create)
+        self.update = humandate(self.update)
+        
+
 class Ticket(object):
     def __init__(self, dct):
         self.id = dct['id']
