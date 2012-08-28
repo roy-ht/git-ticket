@@ -7,6 +7,7 @@ def main():
     subpsr = psr.add_subparsers(help='commands')
     psr_help = subpsr.add_parser('help', help='Show this message.')
     psr_show = subpsr.add_parser('show', help='')
+    psr_show.add_argument('number', metavar='num', type=int, help='an issue number')    
     psr_list = subpsr.add_parser('list', help='')
     psr_mine = subpsr.add_parser('mine', help='')
     psr_commit = subpsr.add_parser('commit', help='')
