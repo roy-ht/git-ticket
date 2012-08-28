@@ -58,7 +58,7 @@ class Ticket(object):
         self.closed = humandate(self.closed)
         if not self.closed_by:
             self.closed_by = 'None'
-        self.milestone = str(self.milestone)
+        # self.milestone = str(self.milestone)
 
     def tostr(self, name, width):
         tgt = getattr(self, name)

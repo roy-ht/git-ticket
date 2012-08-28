@@ -63,6 +63,8 @@ def ticketdetail(tic):
     r += u'[Assign] {term.magenta}{tic.assign}{term.normal}\n'.format(tic=tic, term=term)
     if tic.labels:
         r += u'[Labels] {0}\n'.format(u', '.join(tic.labels))
+    if tic.milestone:
+        r += u"[MStone] {tic.milestone[description]}\n".format(tic=tic)
     if tic.state == 'closed':
         r += u'[Closed] at {tic.closed}\n'.format(tic=tic)
     r += u'\n'
