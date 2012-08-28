@@ -52,3 +52,5 @@ def termwidth():
     return term.width
 
 
+def horline():
+    return u'-' * termwidth()
