@@ -35,6 +35,8 @@ def issues(cfg, params={}):
     if 'gtoken' in cfg:
         params['access_token'] = cfg['gtoken']
     r = requests.get(url, params=params).json
+    if 'message' in r:
+        raise ValueError('Invarid query: {0}'.format(r['message']))
     tickets = []
     for j in r:
         create = todatetime(j['created_at'])
@@ -58,8 +60,12 @@ def issue(cfg, number, params={}):
     if 'gtoken' in cfg:
         params['access_token'] = cfg['gtoken']
     j = requests.get(url, params=params).json
+    if 'message' in j:
+        raise ValueError('Invarid query: {0}'.format(j['message']))
     labels = [x['name'] for x in j['labels']]
     cj = requests.get(ISSUE_COMMENTS.format(issueid=number, **cfg), params=params).json
+    if 'message' in cj:
+        raise ValueError('Invarid query: {0}'.format(cj['message']))
     comments = [ticket.Comment({'id':x['id'],
                                 'body':x['body'],
                                 'created_by':nested_access(x, 'user.login'),

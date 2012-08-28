@@ -8,18 +8,30 @@ from gitticket import display
 
 def show(opts):
     cfg = config.parseconfig()
-    tic = github.issue(cfg, opts['number'], params=opts)
+    try:
+        tic = github.issue(cfg, opts['number'], params=opts)
+    except ValueError as e:
+        print e
+        return
     print display.ticketdetail(tic)
 
 def list(opts):
     cfg = config.parseconfig()
-    r = github.issues(cfg, params=opts)
+    try:
+        r = github.issues(cfg, params=opts)
+    except ValueError as e:
+        print e
+        return
     print display.ticketlist(r)
                          
 def mine(opts):
     cfg = config.parseconfig()
     opts['assignee'] = cfg['name']
-    r = github.issues(cfg, params=opts)
+    try:
+        r = github.issues(cfg, params=opts)
+    except ValueError as e:
+        print e
+        return
     print display.ticket(r)
 
 def commit(opts):
