@@ -1,9 +1,11 @@
 #!/usr/bin/env python
 # -*- coding:utf-8 -*-
-
+import datetime
 import json
 import requests
 import os
+from gitticket.config import nested_access
+from gitticket import ticket
 
 BASEURL = 'https://api.github.com'
 AUTH = os.path.join(BASEURL, 'authorizations')
@@ -32,6 +34,15 @@ def issues(cfg):
     params = {}
     if 'gtoken' in cfg:
         params['access_token'] = cfg['gtoken']
-    r = requests.get(url, params=params)
-    return r.json
+    r = requests.get(url, params=params).json
+    datefmt = "%Y-%m-%dT%H:%M:%S%Z"
+    tickets = []
+    for j in r:
+        create = datetime.datetime.strptime(j['created_at'].replace('Z', 'UTC'), datefmt) if j['created_at'] else None
+        update = datetime.datetime.strptime(j['updated_at'].replace('Z', 'UTC'), datefmt) if j['updated_at'] else None
+        closed = datetime.datetime.strptime(j['closed_at'].replace('Z', 'UTC'), datefmt) if j['closed_at'] else None
+        t = ticket.Ticket({'id':j['number'], 'state':j['state'], 'title':j['title'], 'assign':nested_access(j, 'assignee.login'),
+                           'commentnum':j['comments'], 'create':create, 'update':update, 'closed':closed})
+        tickets.append(t)
+    return tickets
     
