@@ -15,7 +15,10 @@ def list(opts):
     print display.ticket(r)
                          
 def mine(opts):
-    pass
+    cfg = config.parseconfig()
+    opts['assignee'] = cfg['name']
+    r = github.issues(cfg, params=opts)
+    print display.ticket(r)
 
 def commit(opts):
     pass
