@@ -9,7 +9,7 @@ from gitticket import display
 def show(opts):
     cfg = config.parseconfig()
     tic = github.issue(cfg, opts['number'], params=opts)
-    print display.ticket(tic)
+    print display.ticketdetail(tic)
 
 def list(opts):
     cfg = config.parseconfig()
