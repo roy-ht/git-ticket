@@ -63,3 +63,6 @@ def issue(cfg, number, params={}):
                             'closed':closed})
     return tic
     
+def todatetime(dstr):
+    if isinstance(dstr, basestring):
+        return datetime.datetime.strptime(dstr.replace('Z', 'UTC'), DATEFMT)
