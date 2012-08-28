@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 # -*- coding:utf-8 -*-
 
-import operator as opr
-import itertools as itrt
 import blessings
 from gitticket import util
 
