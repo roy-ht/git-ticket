@@ -35,11 +35,6 @@ class Table(object):
         return u'\n'.join((u' ' * self.margin).join(x) for x in lines)
 
 
-def termwidth():
-    term = blessings.Terminal()
-    return term.width
-
-
 def ticketlist(tickets):
     u"""Ticketオブジェクトのリストを表示する"""
     t = Table(tickets)
@@ -50,3 +45,10 @@ def ticketlist(tickets):
     t.fit()
     return t.output()
             
+
+
+def termwidth():
+    term = blessings.Terminal()
+    return term.width
+
+
