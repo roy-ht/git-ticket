@@ -11,7 +11,7 @@ def show(opts):
 
 def list(opts):
     cfg = config.parseconfig()
-    r = github.issues(cfg)
+    r = github.issues(cfg, params=opts)
     print display.ticket(r)
                          
 def mine(opts):

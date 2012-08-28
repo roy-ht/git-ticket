@@ -28,10 +28,9 @@ def authorize(name, pswd):
     r = requests.post(AUTH, data=json.dumps({'scopes':['repo'], 'note':'git-ticket'}), auth=(name, pswd))
     return r.json
 
-def issues(cfg):
+def issues(cfg, params={}):
     u"""name, repoが含まれる辞書"""
     url = ISSUES.format(**cfg)
-    params = {}
     if 'gtoken' in cfg:
         params['access_token'] = cfg['gtoken']
     r = requests.get(url, params=params).json
