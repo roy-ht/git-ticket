@@ -24,6 +24,8 @@ ISSUE_LABEL = os.path.join(ISSUE_LABELS, '{label}')
 MILESTONES = os.path.join(REPO, 'milestones')
 MILESTONE = os.path.join(MILESTONES, '{milestoneid}')
 
+DATEFMT = "%Y-%m-%dT%H:%M:%S%Z"
+
 def authorize(name, pswd):
     r = requests.post(AUTH, data=json.dumps({'scopes':['repo'], 'note':'git-ticket'}), auth=(name, pswd))
     return r.json
@@ -34,12 +36,11 @@ def issues(cfg, params={}):
     if 'gtoken' in cfg:
         params['access_token'] = cfg['gtoken']
     r = requests.get(url, params=params).json
-    datefmt = "%Y-%m-%dT%H:%M:%S%Z"
     tickets = []
     for j in r:
-        create = datetime.datetime.strptime(j['created_at'].replace('Z', 'UTC'), datefmt) if j['created_at'] else None
-        update = datetime.datetime.strptime(j['updated_at'].replace('Z', 'UTC'), datefmt) if j['updated_at'] else None
-        closed = datetime.datetime.strptime(j['closed_at'].replace('Z', 'UTC'), datefmt) if j['closed_at'] else None
+        create = datetime.datetime.strptime(j['created_at'].replace('Z', 'UTC'), DATEFMT) if j['created_at'] else None
+        update = datetime.datetime.strptime(j['updated_at'].replace('Z', 'UTC'), DATEFMT) if j['updated_at'] else None
+        closed = datetime.datetime.strptime(j['closed_at'].replace('Z', 'UTC'), DATEFMT) if j['closed_at'] else None
         t = ticket.Ticket({'id':j['number'], 'state':j['state'], 'title':j['title'], 'assign':nested_access(j, 'assignee.login'),
                            'commentnum':j['comments'], 'create':create, 'update':update, 'closed':closed})
         tickets.append(t)
