@@ -59,14 +59,14 @@ def ticketdetail(tic):
     r = u'\n'
     r += u'[{term.cyan}{tic.state}{term.normal}] {term.green}#{tic.id}{term.normal} created by {term.magenta}{tic.created_by}{term.normal} at {tic.create}, {tic.c} comments, updated at {tic.update}\n'.format(tic=tic, term=term)
     r += horline(u'=') + u'\n'
-    r += u'[Title]  {tic.title}\n'.format(tic=tic)
-    r += u'[Assign] {term.magenta}{tic.assign}{term.normal}\n'.format(tic=tic, term=term)
+    r += u'Title:  {tic.title}\n'.format(tic=tic)
+    r += u'Assign: {term.magenta}{tic.assign}{term.normal}\n'.format(tic=tic, term=term)
     if tic.labels:
-        r += u'[Labels] {0}\n'.format(u', '.join(tic.labels))
+        r += u'Labels: {0}\n'.format(u', '.join(tic.labels))
     if tic.milestone:
-        r += u"[MStone] {tic.milestone[description]}\n".format(tic=tic)
+        r += u"MStone: {term.green}#{tic.milestone[number]}{term.normal} {tic.milestone[description]}\n".format(tic=tic, term=term)
     if tic.state == 'closed':
-        r += u'[Closed] at {tic.closed}\n'.format(tic=tic)
+        r += u'Closed at: {tic.closed}\n'.format(tic=tic)
     r += u'\n'
     r += tic.body + u'\n'
     r += u'\n'
