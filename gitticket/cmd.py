@@ -34,9 +34,6 @@ def mine(opts):
         return
     print display.ticket(r)
 
-def commit(opts):
-    pass
-
 def add(opts):
     pass
 
