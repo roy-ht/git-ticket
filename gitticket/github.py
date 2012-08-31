@@ -141,7 +141,14 @@ MilestoneId:
         data['milestone'] = mstoneid
     if description:
         data['body'] = description
-    print data
+        
+    if 'gtoken' in cfg:
+        params['access_token'] = cfg['gtoken']
+    r = requests.post(ISSUES.format(**cfg), data=json.dumps(data), params=params).json
+    if 'message' in r:
+        raise ValueError('Request Error: {0}'.format(r['message']))
+    else:
+        return r
 
     
 def todatetime(dstr):
