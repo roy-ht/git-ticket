@@ -117,11 +117,11 @@ MilestoneId:
 # description below here
 
 """.format(lbls=', '.join(labels(cfg)), assign=', '.join(assignees(cfg)))
-    editor = util.cmd_stdout(('git', 'var', 'GIT_EDITOR'))
+    editor = util.cmd_stdout(('git', 'var', 'GIT_EDITOR')).split(u' ')
     tmpfile = tempfile.mkstemp()
     with open(tmpfile[1], 'w') as fo:
         fo.write(template)
-    util.cmd_stdout((editor, tmpfile[1]))
+    util.cmd_stdout(editor + [tmpfile[1]])
     
     val = open(tmpfile[1]).read()
     title = util.regex_extract(ur'Title:([^#]+?)[#\n]', val, '').strip()
