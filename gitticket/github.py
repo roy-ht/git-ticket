@@ -88,6 +88,18 @@ def issue(cfg, number, params={}):
                          'comments':comments,
                          })
     return tic
+
+
+def assignees(cfg):
+    r = requests.get(ASSIGNEES.format(**cfg)).json
+    return [x['login'] for x in r]
+
+
+def labels(cfg):
+    r = requests.get(LABELS.format(**cfg)).json
+    return [x['name'] for x in r]
+
+
     
 def todatetime(dstr):
     if isinstance(dstr, basestring):
