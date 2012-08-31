@@ -134,7 +134,7 @@ MilestoneId:
         raise ValueError('You must write a title')
     data['title'] = title
     if assign:
-        data['assign'] = assign
+        data['assignee'] = assign
     if lbls:
         data['labels'] = [x.strip() for x in lbls.split(u',')]
     if mstoneid:
