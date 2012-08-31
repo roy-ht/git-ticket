@@ -3,6 +3,7 @@
 
 import sys
 import github
+import blessings
 from gitticket import config
 from gitticket import display
 
@@ -36,7 +37,16 @@ def mine(opts):
 
 def add(opts):
     cfg = config.parseconfig()
-    github.add(cfg, params=opts)
+    try:
+        r = github.add(cfg, params=opts)
+    except ValueError as e:
+        print e
+        return
+    term = blessings.Terminal()
+    print u'Added {term.green}#{0}{term.normal}\nURL: {1}\n'.format(r['number'], r['html_url'], term=term)
+
+def close(opts):
+    return update(opts)
 
 def update(opts):
     pass
