@@ -92,13 +92,17 @@ def issue(cfg, number, params={}):
     return tic
 
 
-def assignees(cfg):
-    r = requests.get(ASSIGNEES.format(**cfg)).json
+def assignees(cfg, params={}):
+    if 'gtoken' in cfg:
+        params['access_token'] = cfg['gtoken']
+    r = requests.get(ASSIGNEES.format(**cfg), params=params).json
     return [x['login'] for x in r]
 
 
-def labels(cfg):
-    r = requests.get(LABELS.format(**cfg)).json
+def labels(cfg, params={}):
+    if 'gtoken' in cfg:
+        params['access_token'] = cfg['gtoken']
+    r = requests.get(LABELS.format(**cfg), params=params).json
     return [x['name'] for x in r]
 
 
