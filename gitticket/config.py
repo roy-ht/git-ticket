@@ -1,12 +1,8 @@
 #!/usr/bin/env python
 # -*- coding:utf-8 -*-
-
-import subprocess as sp
 import os
 import sys
-
-def cmd_stdout(arglist):
-    return sp.Popen(arglist, stdout=sp.PIPE).communicate()[0].strip()
+from gitticket import util
 
 def nested_access(d, keystr, default=None):
     keys = keystr.split('.')
@@ -29,19 +25,19 @@ def conftodict(config):
     
 
 def git():
-    rawstrs = cmd_stdout(('git', 'config', '-l')).split('\n')
+    rawstrs = util.cmd_stdout(('git', 'config', '-l')).split('\n')
     return dict(x.split('=', 1) for x in filter(None, rawstrs))
 
 def is_inside_work_tree():
-    return cmd_stdout(('git', 'rev-parse', '--is-inside-work-tree')) == 'true'
+    return util.cmd_stdout(('git', 'rev-parse', '--is-inside-work-tree')) == 'true'
 
 def git_dir():
     if not is_inside_work_tree():
         return None
-    return os.path.normpath(os.path.join(os.path.abspath(cmd_stdout(('git', 'rev-parse', '-q', '--git-dir'))), '..')) # .gitの一つ上
+    return os.path.normpath(os.path.join(os.path.abspath(util.cmd_stdout(('git', 'rev-parse', '-q', '--git-dir'))), '..')) # .gitの一つ上
 
 def guess_repo_name():
-    origin_url = cmd_stdout(('git', 'config', '--get', 'remote.urigin.url'))
+    origin_url = util.cmd_stdout(('git', 'config', '--get', 'remote.urigin.url'))
     if origin_url:
         return origin_url.rsplit('/', 1)[1].replace('.git', '')
     # originが見つからなかったら、ディレクトリ名にする
