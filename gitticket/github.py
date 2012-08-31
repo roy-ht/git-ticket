@@ -2,10 +2,13 @@
 # -*- coding:utf-8 -*-
 import datetime
 import json
+import re
 import requests
 import os
+import tempfile
 from gitticket.config import nested_access
 from gitticket import ticket
+from gitticket import util
 
 BASEURL = 'https://api.github.com'
 AUTH = os.path.join(BASEURL, 'authorizations')
@@ -99,6 +102,43 @@ def labels(cfg):
     r = requests.get(LABELS.format(**cfg)).json
     return [x['name'] for x in r]
 
+
+def add(cfg, params={}):
+    template = """Title: 
+# Available assignee: {assign}
+Assign:
+# Available labels: {lbls}
+Labels: 
+MilestoneId: 
+
+# description below here
+
+""".format(lbls=', '.join(labels(cfg)), assign=', '.join(assignees(cfg)))
+    editor = util.cmd_stdout(('git', 'var', 'GIT_EDITOR'))
+    tmpfile = tempfile.mkstemp()
+    with open(tmpfile[1], 'w') as fo:
+        fo.write(template)
+    util.cmd_stdout((editor, tmpfile[1]))
+    
+    val = open(tmpfile[1]).read()
+    title = util.regex_extract(ur'Title:([^#]+?)[#\n]', val, '').strip()
+    assign = util.regex_extract(ur'Assign:([^#]+?)[#\n]', val, '').strip()
+    lbls = util.regex_extract(ur'Labels:([^#]+?)[#\n]', val, '').strip()
+    mstoneid = util.regex_extract(ur'MilestoneId:([^#]+?)[#\n]', val, '').strip()
+    description = util.regex_extract(ur'# description below here.*?\n(.*)', val, '').strip()
+    data = {}
+    if not title:
+        raise ValueError('You must write a title')
+    data['title'] = title
+    if assign:
+        data['assign'] = assign
+    if lbls:
+        data['labels'] = [x.strip() for x in lbls.split(u',')]
+    if mstoneid:
+        data['milestone'] = mstoneid
+    if description:
+        data['body'] = description
+    print data
 
     
 def todatetime(dstr):

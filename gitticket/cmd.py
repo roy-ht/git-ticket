@@ -35,7 +35,8 @@ def mine(opts):
     print display.ticket(r)
 
 def add(opts):
-    pass
+    cfg = config.parseconfig()
+    github.add(cfg, params=opts)
 
 def update(opts):
     pass
