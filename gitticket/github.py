@@ -2,7 +2,6 @@
 # -*- coding:utf-8 -*-
 import datetime
 import json
-import re
 import requests
 import os
 import tempfile
