@@ -95,7 +95,7 @@ def humandate(dt):
         minute = delta.seconds // 60
         return '{0} minute{1} ago'.format(minute, 's' if minute > 1 else '')
     elif delta.seconds > 0:
-        return '{0} minute{1} ago'.format(delta.seconds, 's' if delta.seconds > 1 else '')
+        return '{0} second{1} ago'.format(delta.seconds, 's' if delta.seconds > 1 else '')
     else:
         return 'just now'
 
