@@ -109,7 +109,7 @@ def labels(cfg, params={}):
 def add(cfg, params={}):
     template = """Title: 
 # Available assignee: {assign}
-Assign:
+Assign: 
 # Available labels: {lbls}
 Labels: 
 MilestoneId: 
