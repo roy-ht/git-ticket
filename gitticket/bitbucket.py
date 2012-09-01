@@ -64,8 +64,8 @@ def issues(params={}):
     if 'assignee' in params:
         params['responsible'] = params.pop('assignee')
     params['sort'] = params.pop('order', 'utc_last_updated')
-    print url 
-    print params
+    if params['sort'] == 'updated':
+        params['sort'] = 'utc_last_updated'
     r = _request('get', url, params=params).json
     tickets = []
     for j in r['issues']:
