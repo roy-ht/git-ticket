@@ -77,3 +77,12 @@ def github_auth(opts):
         sys.exit(r['message'])
     print 'You got an access token: {0}'.format(r['token'])
     print 'If you want to set global, type:\ngit config --global ticket.github.token {0}'.format(r['token'])
+
+
+def bitbucket_auth(opts):
+    from gitticket import bitbucket
+    r = bitbucket.authorize()
+    print 'You got an access token and access token secret:\n{token}\n{secret}'.format(token=r[0], secret=r[1])
+    print 'If you want to set global, type:'
+    print 'git config --global ticket.bitbucket.token {0}'.format(r[0])
+    print 'git config --global ticket.bitbucket.token-secret {0}'.format(r[1])

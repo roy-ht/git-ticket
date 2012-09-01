@@ -71,4 +71,6 @@ def parseconfig():
     from gitticket import github, bitbucket
     config['service_name'] = gconfig.get('ticket.service', guess_service())
     config['service'] = {'github':github, 'bitbucket':bitbucket}.get(config['service_name'], None)
+    config['btoken'] = gconfig.get('ticket.bitbucket.token', None)
+    config['btoken_secret'] = gconfig.get('ticket.bitbucket.token_secret', None)
     return config

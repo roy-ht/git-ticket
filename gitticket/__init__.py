@@ -30,9 +30,11 @@ def main():
     psr_comment.add_argument('number', metavar='num', type=int, help='an issue number')
     
     psr_github_auth = subpsr.add_parser('github-authorize', help='')
+    psr_bitbucket_auth = subpsr.add_parser('bitbucket-authorize', help='')
     #
     psr_help.set_defaults(cmd=lambda x: psr.print_help())
     psr_github_auth.set_defaults(cmd=cmd.github_auth)
+    psr_bitbucket_auth.set_defaults(cmd=cmd.bitbucket_auth)
     psr_show.set_defaults(cmd=cmd.show)
     psr_list.set_defaults(cmd=cmd.list)
     psr_add.set_defaults(cmd=cmd.add)
