@@ -34,7 +34,7 @@ ISSUE_LABEL = os.path.join(ISSUE_LABELS, '{label}')
 MILESTONES = os.path.join(REPO, 'milestones')
 MILESTONE = os.path.join(MILESTONES, '{milestoneid}')
 
-DATEFMT = "%Y-%m-%dT%H:%M:%S%Z"
+DATEFMT = "%Y-%m-%d %H:%M:%S%Z"
 
 def authorize():
     service = OAuth1Service(name='bitbucket', consumer_key=CONSUMER_KEY, consumer_secret=CONSUMER_SECRET,
@@ -237,4 +237,4 @@ def _request(rtype, url, params={}, data=None):
     
 def todatetime(dstr):
     if isinstance(dstr, basestring):
-        return datetime.datetime.strptime(dstr.replace('Z', 'UTC'), DATEFMT)
+        return datetime.datetime.strptime(dstr.replace('+00:00', 'UTC'), DATEFMT)
