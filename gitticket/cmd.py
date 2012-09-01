@@ -40,8 +40,16 @@ def add(opts):
     term = blessings.Terminal()
     print u'Added {term.green}#{0}{term.normal}\nURL: {1}\n'.format(r['number'], r['html_url'], term=term)
 
+
 def close(opts):
-    return update(opts)
+    try:
+        if not opts['nocomment']:
+            github.comment(opts['number'])
+        github.changestate(opts['number'], 'closed')
+    except ValueError as e:
+        print e
+        return
+
 
 def update(opts):
     try:

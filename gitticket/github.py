@@ -122,6 +122,18 @@ Description:
     else:
         return r
 
+def changestate(number, state):
+    if state not in ('open', 'closed'):
+        raise ValueError('Unknown state: {0}'.format(state))
+    data = {'state': state}
+    cfg = config.parseconfig()
+    r = _request('patch', ISSUE.format(issueid=number, **cfg), data=json.dumps(data)).json
+    if 'message' in r:
+        raise ValueError('Request Error: {0}'.format(r['message']))
+    else:
+        return r
+    
+
 def update(number, params={}):
     tic = issue(number, params)
     template = """Title: {tic_title}
