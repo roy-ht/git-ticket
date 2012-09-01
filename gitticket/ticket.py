@@ -38,8 +38,8 @@ class Ticket(object):
         self.body = dct['body']
         # オプション
         self.closed = dct.get('closed', None) # datetime
-        self.labels = dct.get('labels', None)
-        self.milestone = dct.get('milestone', None)
+        self.labels = dct.get('labels', None) or []
+        self.milestone = dct.get('milestone', None) or {}
         self.closed_by = dct.get('closed_by', None)
         self.comments = dct.get('comments', None)
         
