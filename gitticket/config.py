@@ -43,6 +43,16 @@ def guess_repo_name():
     # originが見つからなかったら、ディレクトリ名にする
     return os.path.basename(git_dir())
 
+def guess_service():
+    u"""github, bitbucketなどサービスをoriginのurlから推測する"""
+    origin_url = util.cmd_stdout(('git', 'config', '--get', 'remote.origin.url'))
+    if 'github.com' in origin_url:
+        return 'github'
+    elif 'bitbucket.org' in origin_url:
+        return 'bitbucket'
+    else:
+        return ''
+
 def parseconfig():
     u"""Parse git config key-values and set for issue handling.
     name: ticket.name 優先、user.nameが次点
@@ -57,5 +67,8 @@ def parseconfig():
     config['gtoken'] = gconfig.get('ticket.github.token', None)
     config['rtoken'] = gconfig.get('ticket.redmine.token', None)
     config['rurl'] = gconfig.get('ticket.redmine.url', None)
-    # どこかで使う sys.exit("Please set ticket.token to git config file.\nFor github, use 'git ticket github-authorize to get OAuth access_token.\nFor redmine, set web API key.")    
+    # どこかで使う sys.exit("Please set ticket.token to git config file.\nFor github, use 'git ticket github-authorize to get OAuth access_token.\nFor redmine, set web API key.")
+    from gitticket import github, bitbucket
+    config['service_name'] = gconfig.get('ticket.service', guess_service())
+    config['service'] = {'github':github, 'bitbucket':bitbucket}.get(config['service_name'], None)
     return config

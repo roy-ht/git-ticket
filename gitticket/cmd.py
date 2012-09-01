@@ -2,15 +2,15 @@
 # -*- coding:utf-8 -*-
 
 import sys
-import github
 import blessings
 from gitticket import config
 from gitticket import display
 
 
 def show(opts):
+    cfg = config.parseconfig()
     try:
-        tic = github.issue(opts['number'])
+        tic = cfg['service'].issue(opts['number'])
     except ValueError as e:
         print e
         return
@@ -18,8 +18,9 @@ def show(opts):
 
 
 def list(opts):
+    cfg = config.parseconfig()
     try:
-        r = github.issues(opts)
+        r = cfg['service'].issues(opts)
     except ValueError as e:
         print e
         return
@@ -30,8 +31,9 @@ def list(opts):
 
 
 def add(opts):
+    cfg = config.parseconfig()
     try:
-        r = github.add()
+        r = cfg['service'].add()
     except ValueError as e:
         print e
         return
@@ -40,33 +42,34 @@ def add(opts):
 
 
 def close(opts):
+    cfg = config.parseconfig()
     try:
         if not opts['nocomment']:
-            github.comment(opts['number'])
-        github.changestate(opts['number'], 'closed')
+            cfg['service'].comment(opts['number'])
+        cfg['service'].changestate(opts['number'], 'closed')
     except ValueError as e:
         print e
-        return
 
 
 def update(opts):
+    cfg = config.parseconfig()
     try:
-        github.update(opts['number'])
+        cfg['service'].update(opts['number'])
     except ValueError as e:
         print e
-        return
 
 
 def comment(opts):
+    cfg = config.parseconfig()
     try:
-        github.comment(opts['number'])
+        cfg['service'].comment(opts['number'])
     except ValueError as e:
         print e
-        return
 
 
 def github_auth(opts):
     import getpass
+    from gitticket import github
     cfg = config.parseconfig()
     pswd = getpass.getpass('github password for {0}: '.format(cfg['name']))
     r = github.authorize(cfg['name'], pswd)
