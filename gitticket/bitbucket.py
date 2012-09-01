@@ -18,7 +18,7 @@ OAUTH_REQUEST = 'https://bitbucket.org/api/1.0/oauth/request_token'
 OAUTH_AUTH = 'https://bitbucket.org/api/1.0/oauth/authenticate'
 OAUTH_ACCESS = 'https://bitbucket.org/api/1.0/oauth/access_token'
 
-BASEURL = 'https://bitbucket.org/api/1.0'
+BASEURL = 'https://api.bitbucket.org/1.0'
 REPO = os.path.join(BASEURL, 'repositories/{name}/{repo}')
 ASSIGNEES = os.path.join(REPO, 'assignees')
 ISSUES = os.path.join(REPO, 'issues')
