@@ -4,8 +4,8 @@ import datetime
 import json
 import requests
 import os
-import tempfile
 from gitticket.config import nested_access
+from gitticket import config
 from gitticket import ticket
 from gitticket import util
 

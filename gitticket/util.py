@@ -1,16 +1,21 @@
 # -*- coding:utf-8 -*-
 
 import subprocess as sp
+import tempfile
 import re
+
 
 def strwidth(s):
     return sum(1 if ord(x) < 256 else 2 for x in s)
 
+
 def cmd_stdout(arglist):
     return sp.Popen(arglist, stdout=sp.PIPE).communicate()[0].strip()
 
+
 def rmcomment(s):
     return s.split('#', 1)[0]
+
 
 def regex_extract(pattern, tgt, default=None):
     r = re.search(pattern, tgt, re.M | re.S)
@@ -20,3 +25,14 @@ def regex_extract(pattern, tgt, default=None):
     if len(grps) == 1:
         return grps[0]
     return grps
+
+
+def inputwitheditor(s):
+    editor = cmd_stdout(('git', 'var', 'GIT_EDITOR')).split(u' ')
+    tmpfile = tempfile.mkstemp()
+    with open(tmpfile[1], 'w') as fo:
+        fo.write(s)
+    cmd_stdout(editor + [tmpfile[1]])
+    
+    return open(tmpfile[1]).read()
+
