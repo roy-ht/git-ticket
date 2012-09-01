@@ -12,7 +12,9 @@ def main():
     psr_mine = subpsr.add_parser('mine', help='')
     psr_add = subpsr.add_parser('add', help='')
     psr_close = subpsr.add_parser('close', help='')
+    psr_close.add_argument('number', metavar='num', type=int, help='an issue number')    
     psr_update = subpsr.add_parser('update', help='')
+    psr_update.add_argument('number', metavar='num', type=int, help='an issue number')    
     psr_local = subpsr.add_parser('local', help='')
     psr_github_auth = subpsr.add_parser('github-authorize', help='')
     #
