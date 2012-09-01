@@ -32,11 +32,10 @@ def authorize(name, pswd):
     r = requests.post(AUTH, data=json.dumps({'scopes':['repo'], 'note':'git-ticket'}), auth=(name, pswd))
     return r.json
 
-def issues(cfg, params={}):
+def issues(params={}):
+    cfg = config.parseconfig()
     url = ISSUES.format(**cfg)
-    if 'gtoken' in cfg:
-        params['access_token'] = cfg['gtoken']
-    r = requests.get(url, params=params).json
+    r = _request('get', url, params=params).json
     if 'message' in r:
         raise ValueError('Invarid query: {0}'.format(r['message']))
     tickets = []
@@ -57,11 +56,10 @@ def issues(cfg, params={}):
         tickets.append(t)
     return tickets
     
-def issue(cfg, number, params={}):
+def issue(number, params={}):
+    cfg = config.parseconfig()
     url = ISSUE.format(issueid=number, **cfg)
-    if 'gtoken' in cfg:
-        params['access_token'] = cfg['gtoken']
-    j = requests.get(url, params=params).json
+    j = _request('get', url, params=params).json
     if 'message' in j:
         raise ValueError('Invarid query: {0}'.format(j['message']))
     labels = [x['name'] for x in j['labels']]
@@ -92,21 +90,19 @@ def issue(cfg, number, params={}):
     return tic
 
 
-def assignees(cfg, params={}):
-    if 'gtoken' in cfg:
-        params['access_token'] = cfg['gtoken']
-    r = requests.get(ASSIGNEES.format(**cfg), params=params).json
+def assignees(params={}):
+    cfg = config.parseconfig()
+    r = _request('get', ASSIGNEES.format(**cfg), params=params).json
     return [x['login'] for x in r]
 
 
-def labels(cfg, params={}):
-    if 'gtoken' in cfg:
-        params['access_token'] = cfg['gtoken']
-    r = requests.get(LABELS.format(**cfg), params=params).json
+def labels(params={}):
+    cfg = config.parseconfig()
+    r = _request('get', LABELS.format(**cfg), params=params).json
     return [x['name'] for x in r]
 
 
-def add(cfg, params={}):
+def add(params={}):
     template = """Title: 
 # Available assignee: {assign}
 Assign: 
@@ -116,20 +112,51 @@ MilestoneId:
 
 # description below here
 
-""".format(lbls=', '.join(labels(cfg)), assign=', '.join(assignees(cfg)))
-    editor = util.cmd_stdout(('git', 'var', 'GIT_EDITOR')).split(u' ')
-    tmpfile = tempfile.mkstemp()
-    with open(tmpfile[1], 'w') as fo:
-        fo.write(template)
-    util.cmd_stdout(editor + [tmpfile[1]])
+""".format(lbls=', '.join(labels()), assign=', '.join(assignees()))
+    val = util.inputwitheditor(template)
+    data = _issuedata_from_template(val)
+    cfg = config.parseconfig()
+    r = _request('post', ISSUES.format(**cfg), data=json.dumps(data), params=params).json
+    if 'message' in r:
+        raise ValueError('Request Error: {0}'.format(r['message']))
+    else:
+        return r
+
+def update(number, params={}):
+    tic = issue(number, params)
+    template = """Title: {tic_title}
+# Available assignee: {assign}
+Assign: {tic_assign}
+# Available labels: {lbls}
+Labels: {tic_lbls}
+MilestoneId: {tic_mstoneid}
+
+# description below here
+{tic_body}
+""".format(lbls=u', '.join(labels()),
+           assign=u', '.join(assignees()),
+           tic_title=tic.title,
+           tic_assign=tic.assign if tic.assign != 'None' else u'',
+           tic_lbls=u', '.join(tic.labels),
+           tic_mstoneid=tic.milestone.get('number', ''),
+           tic_body=tic.body)
+    val = util.inputwitheditor(template)
+    data = _issuedata_from_template(val)
+    cfg = config.parseconfig()
+    r = _request('patch', ISSUE.format(issueid=number, **cfg), data=json.dumps(data), params=params).json
+    if 'message' in r:
+        raise ValueError('Request Error: {0}'.format(r['message']))
+    else:
+        return r
     
-    val = open(tmpfile[1]).read()
-    title = util.regex_extract(ur'Title:([^#]+?)[#\n]', val, '').strip()
-    assign = util.regex_extract(ur'Assign:([^#]+?)[#\n]', val, '').strip()
-    lbls = util.regex_extract(ur'Labels:([^#]+?)[#\n]', val, '').strip()
-    mstoneid = util.regex_extract(ur'MilestoneId:([^#]+?)[#\n]', val, '').strip()
-    description = util.regex_extract(ur'# description below here.*?\n(.*)', val, '').strip()
+
+def _issuedata_from_template(s):
     data = {}
+    title = util.regex_extract(ur'Title:([^#]+?)[#\n]', s, '').strip()
+    assign = util.regex_extract(ur'Assign:([^#]+?)[#\n]', s, '').strip()
+    lbls = util.regex_extract(ur'Labels:([^#]+?)[#\n]', s, '').strip()
+    mstoneid = util.regex_extract(ur'MilestoneId:([^#]+?)[#\n]', s, '').strip()
+    description = util.regex_extract(ur'# description below here.*?\n(.*)', s, '').strip()
     if not title:
         raise ValueError('You must write a title')
     data['title'] = title
@@ -141,14 +168,17 @@ MilestoneId:
         data['milestone'] = mstoneid
     if description:
         data['body'] = description
-        
+    return data
+    
+
+def _request(rtype, url, params={}, data=None):
+    cfg = config.parseconfig()
     if 'gtoken' in cfg:
         params['access_token'] = cfg['gtoken']
-    r = requests.post(ISSUES.format(**cfg), data=json.dumps(data), params=params).json
-    if 'message' in r:
-        raise ValueError('Request Error: {0}'.format(r['message']))
+    if data:
+        return getattr(requests, rtype)(url, data=data, params=params)
     else:
-        return r
+        return getattr(requests, rtype)(url, params=params)
 
     
 def todatetime(dstr):
