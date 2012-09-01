@@ -7,6 +7,7 @@ import blessings
 from gitticket import config
 from gitticket import display
 
+
 def show(opts):
     try:
         tic = github.issue(opts['number'])
@@ -15,6 +16,7 @@ def show(opts):
         return
     print display.ticketdetail(tic)
 
+
 def list(opts):
     try:
         r = github.issues()
@@ -22,7 +24,8 @@ def list(opts):
         print e
         return
     print display.ticketlist(r)
-                         
+
+
 def mine(opts):
     try:
         r = github.issues()
@@ -30,6 +33,7 @@ def mine(opts):
         print e
         return
     print display.ticket(r)
+
 
 def add(opts):
     try:
