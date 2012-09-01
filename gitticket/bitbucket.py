@@ -113,18 +113,6 @@ def issue(number, params={}):
     return tic
 
 
-def assignees(params={}):
-    cfg = config.parseconfig()
-    r = _request('get', ASSIGNEES.format(**cfg), params=params).json
-    return [x['login'] for x in r]
-
-
-def labels(params={}):
-    cfg = config.parseconfig()
-    r = _request('get', LABELS.format(**cfg), params=params).json
-    return [x['name'] for x in r]
-
-
 def add(params={}):
     template = """Title: 
 # Available assignee: {assign}
