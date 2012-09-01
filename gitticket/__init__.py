@@ -13,6 +13,8 @@ def main():
     psr_list = subpsr.add_parser('list', help='Show open issues')
     psr_list.add_argument('-s', '--state', dest='state', help='select an state to display')
     psr_list.add_argument('-a', '--assignee', help='filter by assignee')
+    psr_list.add_argument('-o', '--order', choices=('created', 'updated', 'comments'), default='updated',
+                          help='sort order of issues.')
     
     psr_add = subpsr.add_parser('add', help='Add an issue')
     
