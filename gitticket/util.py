@@ -13,8 +13,16 @@ def cmd_stdout(arglist):
     return sp.Popen(arglist, stdout=sp.PIPE).communicate()[0].strip()
 
 
-def rmcomment(s):
-    return s.split('#', 1)[0]
+def rmcomment(text):
+    u"""空行はそのまま、コメントのみの行は行ごと削除する
+    """
+    r = []
+    for line in text.split(u'\n'):
+        l = line.split('#', 1)[0]
+        # 最初から空行、またはコメント削除後に文字があったら追加
+        if l or not line:
+            r.append(l)
+    return u'\n'.join(r)
 
 
 def regex_extract(pattern, tgt, default=None):

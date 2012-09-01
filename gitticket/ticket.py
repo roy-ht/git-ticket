@@ -35,7 +35,7 @@ class Ticket(object):
         self.c = dct['commentnum']
         self.create = dct['create'] # datetime
         self.update = dct['update'] # datetime
-        self.body = dct['body']
+        self.body = dct['body'] or u''
         # オプション
         self.closed = dct.get('closed', None) # datetime
         self.labels = dct.get('labels', None) or []

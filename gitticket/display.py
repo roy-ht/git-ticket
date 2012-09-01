@@ -68,7 +68,7 @@ def ticketdetail(tic):
     if tic.state == 'closed':
         r += u'Closed at: {tic.closed}\n'.format(tic=tic)
     r += u'\n'
-    r += tic.body + u'\n'
+    r += u'Description:\n' + tic.body + u'\n'
     r += u'\n'
     for comment in tic.comments:
         r += u'{term.green}#{com.id}{term.normal} {term.magenta}{com.created_by}{term.normal} commented at {com.create}\n'.format(com=comment, term=term)

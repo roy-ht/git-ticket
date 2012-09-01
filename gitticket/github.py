@@ -110,7 +110,7 @@ Assign:
 Labels: 
 MilestoneId: 
 
-# description below here
+Description:
 
 """.format(lbls=', '.join(labels()), assign=', '.join(assignees()))
     val = util.inputwitheditor(template)
@@ -131,7 +131,7 @@ Assign: {tic_assign}
 Labels: {tic_lbls}
 MilestoneId: {tic_mstoneid}
 
-# description below here
+Description:
 {tic_body}
 """.format(lbls=u', '.join(labels()),
            assign=u', '.join(assignees()),
@@ -156,7 +156,7 @@ def _issuedata_from_template(s):
     assign = util.regex_extract(ur'Assign:([^#]+?)[#\n]', s, '').strip()
     lbls = util.regex_extract(ur'Labels:([^#]+?)[#\n]', s, '').strip()
     mstoneid = util.regex_extract(ur'MilestoneId:([^#]+?)[#\n]', s, '').strip()
-    description = util.regex_extract(ur'# description below here.*?\n(.*)', s, '').strip()
+    description = util.rmcomment(util.regex_extract(ur'Description:(.*)', s, '')).strip()
     if not title:
         raise ValueError('You must write a title')
     data['title'] = title
