@@ -10,7 +10,7 @@ from gitticket import display
 def show(opts):
     cfg = config.parseconfig()
     try:
-        tic = github.issue(cfg, opts['number'], params=opts)
+        tic = github.issue(cfg, opts['number'])
     except ValueError as e:
         print e
         return
@@ -19,7 +19,7 @@ def show(opts):
 def list(opts):
     cfg = config.parseconfig()
     try:
-        r = github.issues(cfg, params=opts)
+        r = github.issues(cfg)
     except ValueError as e:
         print e
         return
@@ -29,7 +29,7 @@ def mine(opts):
     cfg = config.parseconfig()
     opts['assignee'] = cfg['name']
     try:
-        r = github.issues(cfg, params=opts)
+        r = github.issues(cfg)
     except ValueError as e:
         print e
         return
@@ -38,7 +38,7 @@ def mine(opts):
 def add(opts):
     cfg = config.parseconfig()
     try:
-        r = github.add(cfg, params=opts)
+        r = github.add(cfg)
     except ValueError as e:
         print e
         return
