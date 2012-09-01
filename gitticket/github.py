@@ -35,6 +35,8 @@ def authorize(name, pswd):
 def issues(params={}):
     cfg = config.parseconfig()
     url = ISSUES.format(**cfg)
+    if 'state' in params and params['state'] not in ('open', 'closed'):
+        raise ValueError('Invarid query: available state are (open, closed)')
     r = _request('get', url, params=params).json
     if 'message' in r:
         raise ValueError('Invarid query: {0}'.format(r['message']))
