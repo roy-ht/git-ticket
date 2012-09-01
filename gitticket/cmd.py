@@ -49,7 +49,13 @@ def close(opts):
     return update(opts)
 
 def update(opts):
-    pass
+    cfg = config.parseconfig()
+    try:
+        github.update(cfg, opts['number'])
+    except ValueError as e:
+        print e
+        return
+
 
 def local(opts):
     pass
