@@ -40,4 +40,4 @@ def main():
     psr_update.set_defaults(cmd=cmd.update)
     psr_comment.set_defaults(cmd=cmd.comment)
     opts = psr.parse_args()
-    opts.cmd(vars(opts))
+    opts.cmd(dict((k, v) for k, v in vars(opts).items() if v is not None))
