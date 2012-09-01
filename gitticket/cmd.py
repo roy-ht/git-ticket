@@ -8,37 +8,32 @@ from gitticket import config
 from gitticket import display
 
 def show(opts):
-    cfg = config.parseconfig()
     try:
-        tic = github.issue(cfg, opts['number'])
+        tic = github.issue(opts['number'])
     except ValueError as e:
         print e
         return
     print display.ticketdetail(tic)
 
 def list(opts):
-    cfg = config.parseconfig()
     try:
-        r = github.issues(cfg)
+        r = github.issues()
     except ValueError as e:
         print e
         return
     print display.ticketlist(r)
                          
 def mine(opts):
-    cfg = config.parseconfig()
-    opts['assignee'] = cfg['name']
     try:
-        r = github.issues(cfg)
+        r = github.issues()
     except ValueError as e:
         print e
         return
     print display.ticket(r)
 
 def add(opts):
-    cfg = config.parseconfig()
     try:
-        r = github.add(cfg)
+        r = github.add()
     except ValueError as e:
         print e
         return
@@ -49,9 +44,8 @@ def close(opts):
     return update(opts)
 
 def update(opts):
-    cfg = config.parseconfig()
     try:
-        github.update(cfg, opts['number'])
+        github.update(opts['number'])
     except ValueError as e:
         print e
         return
