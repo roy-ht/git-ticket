@@ -37,7 +37,7 @@ def git_dir():
     return os.path.normpath(os.path.join(os.path.abspath(util.cmd_stdout(('git', 'rev-parse', '-q', '--git-dir'))), '..')) # .gitの一つ上
 
 def guess_repo_name():
-    origin_url = util.cmd_stdout(('git', 'config', '--get', 'remote.urigin.url'))
+    origin_url = util.cmd_stdout(('git', 'config', '--get', 'remote.origin.url'))
     if origin_url:
         return origin_url.rsplit('/', 1)[1].replace('.git', '')
     # originが見つからなかったら、ディレクトリ名にする
