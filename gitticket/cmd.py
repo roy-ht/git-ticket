@@ -19,20 +19,11 @@ def show(opts):
 
 def list(opts):
     try:
-        r = github.issues()
+        r = github.issues(opts)
     except ValueError as e:
         print e
         return
     print display.ticketlist(r)
-
-
-def mine(opts):
-    try:
-        r = github.issues()
-    except ValueError as e:
-        print e
-        return
-    print display.ticket(r)
 
 
 def add(opts):

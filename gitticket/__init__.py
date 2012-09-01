@@ -10,10 +10,9 @@ def main():
     
     psr_show = subpsr.add_parser('show', help='See detail of selected issue.')
     psr_show.add_argument('number', metavar='num', type=int, help='an issue number')
-    
     psr_list = subpsr.add_parser('list', help='Show open issues')
-    
-    psr_mine = subpsr.add_parser('mine', help='Show open issues assigned to you')
+    psr_list.add_argument('-s', '--state', dest='state', help='select an state to display')
+    psr_list.add_argument('-a', '--assignee', help='filter by assignee')
     
     psr_add = subpsr.add_parser('add', help='Add an issue')
     
@@ -34,7 +33,6 @@ def main():
     psr_github_auth.set_defaults(cmd=cmd.github_auth)
     psr_show.set_defaults(cmd=cmd.show)
     psr_list.set_defaults(cmd=cmd.list)
-    psr_mine.set_defaults(cmd=cmd.mine)
     psr_add.set_defaults(cmd=cmd.add)
     psr_close.set_defaults(cmd=cmd.close)
     psr_update.set_defaults(cmd=cmd.update)
