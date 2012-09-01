@@ -160,6 +160,18 @@ Description:
         raise ValueError('Request Error: {0}'.format(r['message']))
     else:
         return r
+
+
+def comment(number, params={}):
+    template = """# comment below here\n"""
+    val = util.inputwitheditor(template)
+    data = {'body': util.rmcomment(val)}
+    cfg = config.parseconfig()
+    r = _request('post', ISSUE_COMMENTS.format(issueid=number, **cfg), data=json.dumps(data), params=params).json
+    if 'message' in r:
+        raise ValueError('Request Error: {0}'.format(r['message']))
+    else:
+        return r
     
 
 def _issuedata_from_template(s):

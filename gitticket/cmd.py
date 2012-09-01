@@ -59,8 +59,13 @@ def update(opts):
         return
 
 
-def local(opts):
-    pass
+def comment(opts):
+    try:
+        github.comment(opts['number'])
+    except ValueError as e:
+        print e
+        return
+
 
 def github_auth(opts):
     import getpass
