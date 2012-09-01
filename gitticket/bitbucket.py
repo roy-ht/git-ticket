@@ -225,9 +225,9 @@ def _issuedata_from_template(s):
 def _request(rtype, url, params={}, data=None):
     cfg = config.parseconfig()
     session = requests
-    if 'btoken' in cfg and 'btoken_secret' in cfg:
-        oauth = OAuth1Hook(consumer_key=CONSUMER_KEY, consumer_secret=CONSUMER_SECRET,
-                          access_token=cfg['btoken'], access_token_secret=cfg['btoken_secret'])
+    if cfg['btoken'] and cfg['btoken_secret']:
+        oauth = OAuth1Hook(CONSUMER_KEY, CONSUMER_SECRET,
+                           access_token=cfg['btoken'], access_token_secret=cfg['btoken_secret'])
         session = requests.session(hooks={'pre_request': oauth})
     if data:
         return getattr(session, rtype)(url, data=data, params=params)
