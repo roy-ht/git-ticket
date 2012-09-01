@@ -23,7 +23,10 @@ def list(opts):
     except ValueError as e:
         print e
         return
-    print display.ticketlist(r)
+    if not r:
+        print u'No tickets.\n'
+    else:
+        print display.ticketlist(r)
 
 
 def add(opts):
