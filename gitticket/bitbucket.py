@@ -86,33 +86,28 @@ def issues(params={}):
     
 def issue(number, params={}):
     cfg = config.parseconfig()
-    url = ISSUE.format(issueid=number, **cfg)
-    j = _request('get', url, params=params).json
-    if 'message' in j:
-        raise ValueError('Invarid query: {0}'.format(j['message']))
-    labels = [x['name'] for x in j['labels']]
-    cj = requests.get(ISSUE_COMMENTS.format(issueid=number, **cfg), params=params).json
-    if 'message' in cj:
-        raise ValueError('Invarid query: {0}'.format(cj['message']))
-    comments = [ticket.Comment({'id':x['id'],
-                                'body':x['body'],
-                                'created_by':nested_access(x, 'user.login'),
-                                'create':todatetime(x['created_at']),
-                                'update':todatetime(x['updated_at']),
+    j = _request('get', ISSUE.format(issueid=number, **cfg), params=params).json
+    cj = _request('get', ISSUE_COMMENTS.format(issueid=number, **cfg), {'limit':50}).json
+    cj = [x for x in cj if x['content'] is not None]
+    # commentは特殊。statusの変更がコメント化され、APIからは補足できないので
+    # その手のコメントは削る必要がある。
+    comments = [ticket.Comment({'id':x['comment_id'],
+                                'body':x['content'] or u'',
+                                'created_by':nested_access(x, 'author_info.username'),
+                                'create':todatetime(x['utc_created_on']),
+                                'update':todatetime(x['utc_updated_on']),
                                 }) for x in cj]
-    tic = ticket.Ticket({'id':j['number'],
-                         'state':j['state'],
+    tic = ticket.Ticket({'id':j['local_id'],
+                         'state':j['status'],
                          'title':j['title'],
-                         'body':j['body'],
-                         'closed_by':j['closed_by'],
-                         'labels':labels,
-                         'milestone':j['milestone'],
-                         'created_by':nested_access(j, 'user.login'),
-                         'assign':nested_access(j, 'assignee.login'),
-                         'commentnum':j['comments'],
-                         'create':todatetime(j['created_at']),
-                         'update':todatetime(j['updated_at']),
-                         'closed':todatetime(j['updated_at']),
+                         'body':j['content'],
+                         'labels':[nested_access(j, 'metadata.kind')],
+                         'milestone':nested_access(j, 'metadata.milestone'),
+                         'created_by':nested_access(j, 'reported_by.username'),
+                         'assign':nested_access(j, 'responsible.username'),
+                         'commentnum':j['comment_count'],
+                         'create':todatetime(j['utc_created_on']),
+                         'update':todatetime(j['utc_last_updated']),
                          'comments':comments,
                          })
     return tic
