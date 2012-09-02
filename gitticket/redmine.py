@@ -11,19 +11,13 @@ from gitticket import util
 
 REPO = '{rurl}/'
 ASSIGNEES = os.path.join(REPO, 'assignees')
+STATUSES = os.path.join(REPO, 'issue_statuses.json')
+TRACKERS = os.path.join(REPO, 'trackers.json')
+MEMBERSHIPS = os.path.join(REPO, 'projects/{repo}/memberships.json')
+USER = os.path.join(REPO, 'users/{userid}.json')
 ISSUES = os.path.join(REPO, 'issues.json')
 ISSUE = os.path.join(REPO, 'issues/{issueid}.json')
 ISSUE_URL = os.path.join(REPO, 'issues/{issueid}')
-ISSUE_COMMENTS = os.path.join(ISSUE, 'comments')
-ISSUE_COMMENT = os.path.join(ISSUE_COMMENTS, '{commentid}')
-ISSUES_EVENT = os.path.join(ISSUES, 'events')
-ISSUE_EVENT = os.path.join(ISSUE, 'events')
-LABELS = os.path.join(REPO, 'labels')
-LABEL = os.path.join(LABELS, '{label}')
-ISSUE_LABELS = os.path.join(ISSUE, 'labels')
-ISSUE_LABEL = os.path.join(ISSUE_LABELS, '{label}')
-MILESTONES = os.path.join(REPO, 'milestones')
-MILESTONE = os.path.join(MILESTONES, '{milestoneid}')
 
 DATEFMT = "%Y-%m-%dT%H:%M:%S%Z"
 
