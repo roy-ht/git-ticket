@@ -11,8 +11,8 @@ class Comment(object):
         self.body = dct['body']
         self.created_by = dct['created_by']
         self.create = dct['create'] # datetime
-        self.update = dct['update'] # datetime
-        self.body = dct['body']
+        # option value
+        self.update = dct.get('update', None) # datetime
 
         self._format()
 
@@ -22,7 +22,8 @@ class Comment(object):
     def _format(self):
         self.id = str(self.id)
         self.create = humandate(self.create)
-        self.update = humandate(self.update)
+        if self.update:
+            self.update = humandate(self.update)
         
 
 class Ticket(object):
