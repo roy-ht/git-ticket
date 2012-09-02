@@ -149,7 +149,7 @@ def changestate(number, state):
 def comment(number, params={}):
     template = """# comment below here\n"""
     val = util.inputwitheditor(template)
-    data = {'body': util.rmcomment(val)}
+    data = {'notes': util.rmcomment(val)}
     cfg = config.parseconfig()
     r = _request('post', ISSUE_COMMENTS.format(issueid=number, **cfg), data=json.dumps(data), params=params).json
     if 'message' in r:
