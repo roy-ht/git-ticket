@@ -74,7 +74,7 @@ def ticketdetail(tic):
         r += u'{term.green}#{com.id}{term.normal} {term.magenta}{com.created_by}{term.normal} commented at {com.create}\n'.format(com=comment, term=term)
         r += horline() + u'\n'
         r += u'\n'
-        r += comment.body + u'\n'
+        r += comment.body.format(term=term) + u'\n'
         r += u'\n'
 
     return r
