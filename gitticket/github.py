@@ -108,7 +108,7 @@ def labels(params={}):
 
 
 def add(params={}):
-    template = """Title: 
+    template = u"""Title: 
 # Available assignee: {assign}
 Assign: 
 # Available labels: {lbls}
@@ -141,7 +141,7 @@ def changestate(number, state):
 
 def update(number, params={}):
     tic = issue(number, params)
-    template = """Title: {tic_title}
+    template = u"""Title: {tic_title}
 # Available assignee: {assign}
 Assign: {tic_assign}
 # Available labels: {lbls}

@@ -105,7 +105,7 @@ def issue(number, params={}):
 
 
 def add(params={}):
-    template = """Title: 
+    template = u"""Title: 
 Assign: 
 # Available types: bug, enhancement, proposal, task
 Type: enhancement
@@ -125,7 +125,7 @@ Description:
 
 def update(number, params={}):
     tic = issue(number, params)
-    template = """Title: {tic_title}
+    template = u"""Title: {tic_title}
 Assign: {tic_assign}
 # Available types: bug, enhancement, proposal, task
 Type: {tic_type}
