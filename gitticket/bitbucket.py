@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 # -*- coding:utf-8 -*-
 import datetime
-import json
 import os
 import requests
 from rauth.service import OAuth1Service
@@ -21,19 +20,10 @@ OAUTH_ACCESS = 'https://bitbucket.org/api/1.0/oauth/access_token'
 BASEURL = 'https://api.bitbucket.org/1.0'
 ISSUEURL = 'https://bitbucket.org/{name}/{repo}/issue/{issueid}'
 REPO = os.path.join(BASEURL, 'repositories/{name}/{repo}')
-ASSIGNEES = os.path.join(REPO, 'assignees')
 ISSUES = os.path.join(REPO, 'issues')
 ISSUE = os.path.join(ISSUES, '{issueid}')
 ISSUE_COMMENTS = os.path.join(ISSUE, 'comments')
 ISSUE_COMMENT = os.path.join(ISSUE_COMMENTS, '{commentid}')
-ISSUES_EVENT = os.path.join(ISSUES, 'events')
-ISSUE_EVENT = os.path.join(ISSUE, 'events')
-LABELS = os.path.join(REPO, 'labels')
-LABEL = os.path.join(LABELS, '{label}')
-ISSUE_LABELS = os.path.join(ISSUE, 'labels')
-ISSUE_LABEL = os.path.join(ISSUE_LABELS, '{label}')
-MILESTONES = os.path.join(REPO, 'milestones')
-MILESTONE = os.path.join(MILESTONES, '{milestoneid}')
 
 DATEFMT = "%Y-%m-%d %H:%M:%S%Z"
 
