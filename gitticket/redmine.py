@@ -57,8 +57,9 @@ def issues(params={}):
     
 def issue(number, params={}):
     cfg = config.parseconfig()
-    url = ISSUE.format(issueid=number, **cfg)
-    j = _request('get', url, params=params).json['issue']
+    params['include'] = u','.join(('journals', 'children', 'changesets'))
+    j = _request('get', ISSUE.format(issueid=number, **cfg), params=params).json['issue']
+    comments = [ticket.Comment(_parse_journal(x)) for x in reversed(j['journals'])]
     tic = ticket.Ticket({'id':j['id'],
                          'state':nested_access(j, 'status.name'),
                          'priority':nested_access(j, 'priority.name'),
@@ -67,6 +68,7 @@ def issue(number, params={}):
                          'body':j.get('description', u''),
                          'created_by':nested_access(j, 'author.name'),
                          'assign':nested_access(j, 'assigned_to.name'),
+                         'comments':comments,
                          'create':todatetime(j['created_on']),
                          'update':todatetime(j['updated_on'])})
     return tic
@@ -154,6 +156,23 @@ def _issuedata_from_template(s):
     if description:
         data['description'] = description
     return {'issue':data}
+
+def _parse_journal(j):
+    r = {}
+    r['id'] = j['id']
+    r['created_by'] = nested_access(j, 'user.name')
+    r['create'] = todatetime(j['created_on'])
+    # make body
+    r['body'] = u'\n'.join(u'* ' + _parse_detail(x) for x in j['details'])
+    if 'notes' in j:
+        r['body'] += u'\n\n' + j['notes']
+    return r
+
+def _parse_detail(j):
+    if 'old_value' in j:
+        return u'Change {{term.bold}}{name}{{term.normal}} from {{term.cyan}}{old_value}{{term.normal}} to {{term.cyan}}{new_value}{{term.normal}}'.format(**j)
+    else:
+        return u'Update {{term.bold}}{name}{{term.normal}}'.format(**j)
     
 
 def _request(rtype, url, params={}, data=None, headers={}):
@@ -171,7 +190,6 @@ def _request(rtype, url, params={}, data=None, headers={}):
     return r
 
 
-    
 def todatetime(dstr):
     if isinstance(dstr, basestring):
         return datetime.datetime.strptime(dstr.replace('Z', 'UTC'), DATEFMT)
