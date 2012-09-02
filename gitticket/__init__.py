@@ -42,6 +42,9 @@ def main():
     psr_update.set_defaults(cmd=cmd.update)
     psr_comment.set_defaults(cmd=cmd.comment)
     opts = psr.parse_args()
-    dopts = dict((k, v) for k, v in vars(opts).items() if v is not None)
+    dopts = {}
+    for k, v in vars(opts).items():
+        if v is not None:
+            dopts[k] = v if not isinstance(v, str) else v.decode('utf-8')
     cmd = dopts.pop('cmd')
     cmd(dopts)
