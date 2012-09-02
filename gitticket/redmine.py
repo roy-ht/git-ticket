@@ -131,15 +131,19 @@ Notes:
 
 
 def changestate(number, state):
-    if state not in ('open', 'closed'):
-        raise ValueError('Unknown state: {0}'.format(state))
-    data = {'state': state}
+    avail_state = statuses()
+    if state not in avail_state:
+        if state == u'closed':
+            if u'終了' in avail_state:
+                state = u'終了'
+            elif u'close' in avail_state:
+                state = u'close'
+            else:
+                raise ValueError(u'Invarid query: available status are ({0})'.format(u', '.join(avail_state)).encode('utf-8'))
+    data = {'issue':{'status_id': avail_state[state]}}
     cfg = config.parseconfig()
-    r = _request('patch', ISSUE.format(issueid=number, **cfg), data=json.dumps(data)).json
-    if 'message' in r:
-        raise ValueError('Request Error: {0}'.format(r['message']))
-    else:
-        return r
+    r = _request('put', ISSUE.format(issueid=number, **cfg), data=json.dumps(data), headers={'content-type': 'application/json'})
+    return r.json
     
 
 def comment(number, params={}):
