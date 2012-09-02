@@ -95,20 +95,35 @@ Description:
 
 def update(number, params={}):
     tic = issue(number, params)
-    template = u"""Title: {tic_title}
+    nees = assignees()
+    assignee = 'None'
+    if tic.assign != 'None':
+        cand = [x for x, y in nees.items() if y['name'] == tic.assign]
+        assignee = cand[0] if len(cand) == 1 else 'Not found'
+    template = u"""Title: {tic.title}
+# Available assignees: {assignees}
 Assign: {tic_assign}
+# Available trackers: {trackers}
 Tracker: {tic_tracker}
-Priority: {tic_priority}
-
+# Available priorities: 3-7 (low to high)
+Priority: {tic.priority_id}
+# Available statuses: {statuses}
+Status: 
 Description:
+{tic.body}
 
-{tic_description}
-""".format(tic_title=tic.title,
-           tic_assign=tic.assign if tic.assign != u'None' else u'',
-           tic_tracker=u', '.join(tic.labels),
-           tic_priority=tic.priority,
-           tic_description=tic.body)
+Notes:
+
+""".format(trackers=u', '.join(trackers()),
+           statuses=u', '.join(statuses()),
+           assignees=u', '.join(u'{login}({name})'.format(login=x, name=y['name']) for x, y in nees.items()),
+           tic=tic,
+           tic_assign=assignee,
+           tic_tracker=u', '.join(tic.labels))
+           
     val = util.inputwitheditor(template)
+    if val == template:
+        return
     data = _issuedata_from_template(val)
     cfg = config.parseconfig()
     r = _request('put', ISSUE.format(issueid=number, **cfg), data=json.dumps(data), params=params, headers={'content-type': 'application/json'}).json
