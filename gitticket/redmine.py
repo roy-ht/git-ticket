@@ -152,7 +152,42 @@ def comment(number, params={}):
     data = {'notes': util.rmcomment(val)}
     cfg = config.parseconfig()
     _request('put', ISSUE.format(issueid=number, **cfg), data=json.dumps(data), params=params, headers={'content-type': 'application/json'}).json
+
+
+def statuses():
+    cfg = config.parseconfig()
+    r = _request('get', STATUSES.format(**cfg)).json
+    return dict((x['name'], x['id']) for x in r['issue_statuses'])
+
+
+def trackers():
+    cfg = config.parseconfig()
+    r = _request('get', TRACKERS.format(**cfg)).json
+    return dict((x['name'], x['id']) for x in r['trackers'])
+
+
+def memberships():
+    cfg = config.parseconfig()
+    r = _request('get', MEMBERSHIPS.format(**cfg)).json
+    return r['memberships']
+
+
+def user(n):
+    cfg = config.parseconfig()
+    r = _request('get', USER.format(userid=n, **cfg)).json
+    return r['user']
     
+
+def assignees():
+    r = memberships()
+    nees = {}
+    for member in r:
+        mainrole = min(member['roles'], key=lambda x: x['id'])  # idが小さいrole程権限がでかいと仮定
+        if int(mainrole['id']) < 5:
+            u = user(nested_access(member, 'user.id'))
+            nees[u['login']] = {'id':u['id'], 'name':nested_access(member, 'user.name')}
+    return nees
+
 
 def _issuedata_from_template(s):
     data = {}
@@ -160,37 +195,48 @@ def _issuedata_from_template(s):
     assign = util.regex_extract(ur'Assign:([^#\n]+?)[#\n]', s, '').strip()
     tracker = util.regex_extract(ur'Tracker:([^#\n]+?)[#\n]', s, '').strip()
     priority = util.regex_extract(ur'Priority:([^#\n]+?)[#\n]', s, '').strip()
-    description = util.rmcomment(util.regex_extract(ur'Description:(.*)', s, '')).strip()
+    status = util.regex_extract(ur'Status:([^#\n]+?)[#\n]', s, '').strip()
+    notes = util.regex_extract(ur'Notes:(.*)', s, '').strip()
+    description = util.rmcomment(util.regex_extract(ur'Description:(.*?)Notes:', s, '')).strip()
     if not title:
         raise ValueError('You must write a title')
     data['subject'] = title
     if assign:
-        data['assigned_to_id'] = assign
+        data['assigned_to_id'] = assignees()[assign]
     if tracker:
-        data['tracker_id'] = tracker
+        data['tracker_id'] = trackers()[tracker]
     if priority:
         data['priority_id'] = priority
+    if status:
+        data['status_id'] = statuses()[status]
     if description:
         data['description'] = description
+    if notes:
+        data['notes'] = notes
     return {'issue':data}
+
 
 def _parse_journal(j):
     r = {}
     r['id'] = j['id']
     r['created_by'] = nested_access(j, 'user.name')
     r['create'] = todatetime(j['created_on'])
+    r['body'] = u''
     # make body
-    r['body'] = u'\n'.join(u'* ' + _parse_detail(x) for x in j['details'])
     if 'notes' in j:
-        r['body'] += u'\n\n' + j['notes']
+        r['body'] += j['notes'] + u'\n'
+    r['body'] += u'\n'.join(u'{term.red}*{term.normal} ' + _parse_detail(x) for x in j['details'])
+    r['body'] = r['body'].strip()
     return r
 
 def _parse_detail(j):
     if 'old_value' in j:
+        if j['name'] == 'description':
+            return u'Update {{term.bold}}{name}{{term.normal}}'.format(**j)
         return u'Change {{term.bold}}{name}{{term.normal}} from {{term.cyan}}{old_value}{{term.normal}} to {{term.cyan}}{new_value}{{term.normal}}'.format(**j)
     else:
-        return u'Update {{term.bold}}{name}{{term.normal}}'.format(**j)
-    
+        return u'Add {{term.bold}}{name}{{term.normal}}'.format(**j)
+
 
 def _request(rtype, url, params={}, data=None, headers={}):
     cfg = config.parseconfig()
