@@ -36,6 +36,8 @@ def regex_extract(pattern, tgt, default=None):
 
 
 def inputwitheditor(s):
+    if isinstance(s, unicode):
+        s = s.encode('utf-8')
     editor = cmd_stdout(('git', 'var', 'GIT_EDITOR')).split(u' ')
     tmpfile = tempfile.mkstemp()
     with open(tmpfile[1], 'w') as fo:
