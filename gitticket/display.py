@@ -82,6 +82,8 @@ def ticketdetail(tic):
 
 def termwidth():
     term = blessings.Terminal()
+    if not term.width:
+        return 80
     return term.width
 
 
