@@ -60,7 +60,7 @@ def issues(params={}):
     if 'state' in params:
         avail_states = ('new', 'open', 'resolved', 'on hold', 'invalid', 'duplicate', 'wontfix')
         if params['state'] not in avail_states:
-            raise ValueError('Invarid query: available state are ')
+            raise ValueError('Invarid query: available state are ({0})'.format(u', '.join(avail_states)))
         params['status'] = params.pop('state')
     if 'assignee' in params:
         params['responsible'] = params.pop('assignee')
