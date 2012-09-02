@@ -29,7 +29,6 @@ DATEFMT = "%Y-%m-%dT%H:%M:%S%Z"
 
 def issues(params={}):
     cfg = config.parseconfig()
-    url = ISSUES.format(**cfg)
     if 'limit' not in params:
         params['limit'] = 50
     params['project_id'] = cfg['repo']
@@ -40,7 +39,7 @@ def issues(params={}):
     params['sort'] = params.pop('order', 'updated_on:desc')
     if params['sort'] == 'updated':
         params['sort'] = 'updated_on:desc'
-    r = _request('get', url, params=params).json
+    r = _request('get', ISSUES.format(**cfg), params=params).json
     tickets = []
     for j in r['issues']:
         create = todatetime(j['created_on'])
