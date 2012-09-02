@@ -151,11 +151,7 @@ def comment(number, params={}):
     val = util.inputwitheditor(template)
     data = {'notes': util.rmcomment(val)}
     cfg = config.parseconfig()
-    r = _request('post', ISSUE_COMMENTS.format(issueid=number, **cfg), data=json.dumps(data), params=params).json
-    if 'message' in r:
-        raise ValueError('Request Error: {0}'.format(r['message']))
-    else:
-        return r
+    _request('put', ISSUE.format(issueid=number, **cfg), data=json.dumps(data), params=params, headers={'content-type': 'application/json'}).json
     
 
 def _issuedata_from_template(s):
