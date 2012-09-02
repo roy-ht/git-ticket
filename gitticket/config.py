@@ -64,13 +64,21 @@ def parseconfig():
     config = {}
     config['name'] = gconfig.get('ticket.name', gconfig.get('user.name', None)) or sys.exit('Please set ticket.name or user.name to git config file')
     config['repo'] = gconfig.get('ticket.repo', guess_repo_name())
-    config['gtoken'] = gconfig.get('ticket.github.token', None)
-    config['rtoken'] = gconfig.get('ticket.redmine.token', None)
-    config['rurl'] = gconfig.get('ticket.redmine.url', None)
-    # どこかで使う sys.exit("Please set ticket.token to git config file.\nFor github, use 'git ticket github-authorize to get OAuth access_token.\nFor redmine, set web API key.")
-    from gitticket import github, bitbucket
+    from gitticket import github, bitbucket, redmine
     config['service_name'] = gconfig.get('ticket.service', guess_service())
-    config['service'] = {'github':github, 'bitbucket':bitbucket}.get(config['service_name'], None)
+    config['service'] = {'github':github,
+                         'bitbucket':bitbucket,
+                         'redmine':redmine,
+                         }.get(config['service_name'], None)
+    # github
+    config['gtoken'] = gconfig.get('ticket.github.token', None)
+    # bitbucket
     config['btoken'] = gconfig.get('ticket.bitbucket.token', None)
     config['btoken_secret'] = gconfig.get('ticket.bitbucket.token-secret', None)
+    # redmine
+    config['rurl'] = gconfig.get('ticket.redmine.url', None)
+    if config['rurl']:
+        config['rurl'] = config['rurl'].rstrip(u'/')
+    config['rpassword'] = gconfig.get('ticket.redmine.password', None)
+    config['rtoken'] = gconfig.get('ticket.redmine.token', None)
     return config
