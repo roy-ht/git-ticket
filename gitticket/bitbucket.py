@@ -188,20 +188,26 @@ def _issuedata_from_template(s):
     data = {}
     title = util.regex_extract(ur'Title:([^#]+?)[#\n]', s, '').strip()
     assign = util.regex_extract(ur'Assign:([^#]+?)[#\n]', s, '').strip()
-    lbls = util.regex_extract(ur'Labels:([^#]+?)[#\n]', s, '').strip()
-    mstoneid = util.regex_extract(ur'MilestoneId:([^#]+?)[#\n]', s, '').strip()
+    status = util.regex_extract(ur'Status:([^#]+?)[#\n]', s, '').strip()
+    kind = util.regex_extract(ur'Type:([^#]+?)[#\n]', s, '').strip()
+    priority = util.regex_extract(ur'Priority:([^#]+?)[#\n]', s, '').strip()
+    mstone = util.regex_extract(ur'Milestone:([^#]+?)[#\n]', s, '').strip()
     description = util.rmcomment(util.regex_extract(ur'Description:(.*)', s, '')).strip()
     if not title:
         raise ValueError('You must write a title')
     data['title'] = title
     if assign:
-        data['assignee'] = assign
-    if lbls:
-        data['labels'] = [x.strip() for x in lbls.split(u',')]
-    if mstoneid:
-        data['milestone'] = mstoneid
+        data['responsible'] = assign
+    if kind:
+        data['kind'] = kind
+    if status:
+        data['status'] = status
+    if priority:
+        data['priority'] = priority
+    if mstone:
+        data['milestone'] = mstone
     if description:
-        data['body'] = description
+        data['content'] = description
     return data
     
 
