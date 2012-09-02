@@ -83,7 +83,8 @@ def issues(params={}):
                            'update':update})
         tickets.append(t)
     return tickets
-    
+
+
 def issue(number, params={}):
     cfg = config.parseconfig()
     j = _request('get', ISSUE.format(issueid=number, **cfg), params=params).json
