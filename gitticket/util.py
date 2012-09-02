@@ -44,5 +44,5 @@ def inputwitheditor(s):
         fo.write(s)
     cmd_stdout(editor + [tmpfile[1]])
     
-    return open(tmpfile[1]).read()
+    return open(tmpfile[1]).read().decode('utf-8')
 
