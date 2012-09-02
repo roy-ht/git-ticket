@@ -65,6 +65,9 @@ def issue(number, params={}):
                          'comments':comments,
                          'create':todatetime(j['created_on']),
                          'update':todatetime(j['updated_on'])})
+    # additional attributes
+    tic.priority_id = nested_access(j, 'priority.id')
+
     return tic
 
 
