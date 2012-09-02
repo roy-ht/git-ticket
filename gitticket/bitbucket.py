@@ -144,6 +144,8 @@ Description:
            tic_mstone=tic.milestone or u'',
            tic_content=tic.body)
     val = util.inputwitheditor(template)
+    if val == template:
+        return
     data = _issuedata_from_template(val)
     cfg = config.parseconfig()
     r = _request('put', ISSUE.format(issueid=number, **cfg), data=data, params=params).json

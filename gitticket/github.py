@@ -158,6 +158,8 @@ Description:
            tic_mstoneid=tic.milestone.get('number', ''),
            tic_body=tic.body)
     val = util.inputwitheditor(template)
+    if val == template:
+        return
     data = _issuedata_from_template(val)
     cfg = config.parseconfig()
     r = _request('patch', ISSUE.format(issueid=number, **cfg), data=json.dumps(data), params=params).json
