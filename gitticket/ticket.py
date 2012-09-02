@@ -53,7 +53,8 @@ class Ticket(object):
         self.id = str(self.id)
         if not self.assign:
             self.assign = 'None'
-        self.c = str(self.c)
+        if self.c:
+            self.c = str(self.c)
         self.create = humandate(self.create)
         self.update = humandate(self.update)
         self.closed = humandate(self.closed)
