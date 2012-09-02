@@ -146,25 +146,26 @@ def changestate(number, state):
 def update(number, params={}):
     tic = issue(number, params)
     template = """Title: {tic_title}
-# Available assignee: {assign}
 Assign: {tic_assign}
-# Available labels: {lbls}
-Labels: {tic_lbls}
-MilestoneId: {tic_mstoneid}
+# Available types: bug, enhancement, proposal, task
+Type: {tic_type}
+Status: {tic_status}
+# Available priorities: trivial, minor, major, critical, blocker
+Priority: major
+Milestone: {tic_mstone}
 
 Description:
-{tic_body}
-""".format(lbls=u', '.join(labels()),
-           assign=u', '.join(assignees()),
-           tic_title=tic.title,
+{tic_content}
+""".format(tic_title=tic.title,
            tic_assign=tic.assign if tic.assign != 'None' else u'',
-           tic_lbls=u', '.join(tic.labels),
-           tic_mstoneid=tic.milestone.get('number', ''),
-           tic_body=tic.body)
+           tic_type=u', '.join(tic.labels),
+           tic_status=tic.state,
+           tic_mstone=tic.milestone or u'',
+           tic_content=tic.body)
     val = util.inputwitheditor(template)
     data = _issuedata_from_template(val)
     cfg = config.parseconfig()
-    r = _request('patch', ISSUE.format(issueid=number, **cfg), data=json.dumps(data), params=params).json
+    r = _request('put', ISSUE.format(issueid=number, **cfg), data=data, params=params).json
     if 'message' in r:
         raise ValueError('Request Error: {0}'.format(r['message']))
     else:
