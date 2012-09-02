@@ -131,7 +131,7 @@ Assign: {tic_assign}
 Type: {tic_type}
 Status: {tic_status}
 # Available priorities: trivial, minor, major, critical, blocker
-Priority: major
+Priority: {tic_priority}
 Milestone: {tic_mstone}
 
 Description:
@@ -140,6 +140,7 @@ Description:
            tic_assign=tic.assign if tic.assign != 'None' else u'',
            tic_type=u', '.join(tic.labels),
            tic_status=tic.state,
+           tic_priority=tic.priority,
            tic_mstone=tic.milestone or u'',
            tic_content=tic.body)
     val = util.inputwitheditor(template)
