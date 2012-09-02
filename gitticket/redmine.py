@@ -72,14 +72,19 @@ def issue(number, params={}):
 
 
 def add(params={}):
-    template = u"""Title: 
-Assign: 
+    template = u"""Title:
+# Available assignees: {assignees}
+Assign:
+# Available trackers: {trackers}
 Tracker:
-Priority:
-
+# Available priorities: 3-7 (low to high)
+Priority: 
+# Available statuses: {statuses}
+Status: 
 Description:
 
-"""
+""".format(trackers=u', '.join(trackers()), statuses=u', '.join(statuses()),
+           assignees=u', '.join(u'{login}({name})'.format(login=x, name=y['name']) for x, y in assignees().items()))
     val = util.inputwitheditor(template)
     data = _issuedata_from_template(val)
     cfg = config.parseconfig()
