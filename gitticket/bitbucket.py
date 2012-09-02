@@ -131,17 +131,6 @@ Description:
     r = _request('post', ISSUES.format(**cfg), data=data, params=params).json
     return {'number':r['local_id'], 'html_url':ISSUEURL.format(issueid=r['local_id'], **cfg)}
 
-def changestate(number, state):
-    if state not in ('open', 'closed'):
-        raise ValueError('Unknown state: {0}'.format(state))
-    data = {'state': state}
-    cfg = config.parseconfig()
-    r = _request('patch', ISSUE.format(issueid=number, **cfg), data=json.dumps(data)).json
-    if 'message' in r:
-        raise ValueError('Request Error: {0}'.format(r['message']))
-    else:
-        return r
-    
 
 def update(number, params={}):
     tic = issue(number, params)
@@ -166,10 +155,19 @@ Description:
     data = _issuedata_from_template(val)
     cfg = config.parseconfig()
     r = _request('put', ISSUE.format(issueid=number, **cfg), data=data, params=params).json
-    if 'message' in r:
-        raise ValueError('Request Error: {0}'.format(r['message']))
-    else:
-        return r
+    return {'number':r['local_id'], 'html_url':ISSUEURL.format(issueid=r['local_id'], **cfg)}
+
+
+def changestate(number, state):
+    if state == 'closed':
+        state = 'resolved'
+    avail_states = ('new', 'open', 'resolved', 'on hold', 'invalid', 'duplicate', 'wontfix')
+    if state not in avail_states:
+        raise ValueError('Invarid query: available state are ({0})'.format(u', '.join(avail_states)))
+    data = {'status': state}
+    cfg = config.parseconfig()
+    r = _request('put', ISSUE.format(issueid=number, **cfg), data=data).json
+    return {'number':r['local_id'], 'html_url':ISSUEURL.format(issueid=r['local_id'], **cfg)}
 
 
 def comment(number, params={}):
