@@ -32,11 +32,12 @@ class Ticket(object):
         self.title = dct['title']
         self.created_by = dct['created_by']
         self.assign = dct['assign']
-        self.c = dct['commentnum']
         self.create = dct['create'] # datetime
         self.update = dct['update'] # datetime
         self.body = dct['body'] or u''
         # オプション
+        self.priority = dct.get('priority', None)
+        self.c = dct.get('commentnum', None)
         self.closed = dct.get('closed', None) # datetime
         self.labels = dct.get('labels', None) or []
         self.milestone = dct.get('milestone', None) or {}
