@@ -115,23 +115,21 @@ def issue(number, params={}):
 
 def add(params={}):
     template = """Title: 
-# Available assignee: {assign}
 Assign: 
-# Available labels: {lbls}
-Labels: 
-MilestoneId: 
+# Available types: bug, enhancement, proposal, task
+Type: enhancement
+# Available priorities: trivial, minor, major, critical, blocker
+Priority: major
+Milestone:
 
 Description:
 
-""".format(lbls=', '.join(labels()), assign=', '.join(assignees()))
+"""
     val = util.inputwitheditor(template)
     data = _issuedata_from_template(val)
     cfg = config.parseconfig()
-    r = _request('post', ISSUES.format(**cfg), data=json.dumps(data), params=params).json
-    if 'message' in r:
-        raise ValueError('Request Error: {0}'.format(r['message']))
-    else:
-        return r
+    r = _request('post', ISSUES.format(**cfg), data=data, params=params).json
+    return {'number':r['local_id'], 'html_url':ISSUEURL.format(issueid=r['local_id'], **cfg)}
 
 def changestate(number, state):
     if state not in ('open', 'closed'):
