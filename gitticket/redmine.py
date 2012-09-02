@@ -27,9 +27,12 @@ def issues(params={}):
         params['limit'] = 50
     params['project_id'] = cfg['repo']
     if 'state' in params:
-        if params['state'] not in ('open', 'closed'):
-            raise ValueError('Invarid query: available state are (open, closed)')
+        avail_state = ('open', 'closed', '*')
+        if params['state'] not in avail_state:
+            raise ValueError(u'Invarid query: available status are ({0})'.format(u', '.join(avail_state)))
         params['status_id'] = params.pop('state')
+    else:
+        params['status_id'] = '*'
     params['sort'] = params.pop('order', 'updated_on:desc')
     if params['sort'] == 'updated':
         params['sort'] = 'updated_on:desc'
