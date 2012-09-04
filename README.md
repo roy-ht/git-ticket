@@ -13,7 +13,7 @@ Installation
 From PyPI:
 
 ```bash
-pip install git-ticket
+pip install gitticket
 ```
 
 or github(unstable):
