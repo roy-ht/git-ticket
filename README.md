@@ -114,6 +114,12 @@ ReleaseNote
 * v0.3
 : Initial release
 
+Next?
+=====
+
+* git-flow integration
+
+
 License
 =======
 
