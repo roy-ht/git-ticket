@@ -25,7 +25,7 @@ pip install -e git+https://github.com/aflc/git-ticket.git#egg=git-ticket
 Usage
 -----
 
-### configulation
+### configuration
 
 For github,
 
