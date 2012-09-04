@@ -33,12 +33,26 @@ For github,
 git config ticket.github.token <your_access_token>
 ```
 
+To get your access token, try this:
+
+```bash
+git ticket github-authorize
+```
+
+
 For bitbucket,
 
 ```bash
 git config ticket.bitbucket.token <your_access_token>
 git config ticket.bitbucket.token-secret <your_access_token_secret>
 ```
+
+To get your access token and access token secret, try this:
+
+```bash
+git ticket bitbucket-authorize
+```
+
 
 For redmine,
 
