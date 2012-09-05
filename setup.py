@@ -1,7 +1,6 @@
 from setuptools import setup
 import sys
 
-
 install_requires = ['distribute', 'blessings', 'requests', 'rauth']
 if sys.hexversion < 0x2070000:
     install_requires += ['argparse']
