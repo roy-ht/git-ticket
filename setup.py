@@ -1,5 +1,16 @@
 from setuptools import setup
 import sys
+import os
+
+# Utility function to read the README file.
+# Used for the long_description.  It's nice, because now 1) we have a top level
+# README file and 2) it's easier to type in the README file than to put a raw
+# string in below ...
+def read(fname):
+    try:
+        return open(os.path.join(os.path.dirname(__file__), fname)).read()
+    except Exception:
+        return ''
 
 install_requires = ['distribute', 'blessings', 'requests', 'rauth']
 if sys.hexversion < 0x2070000:
@@ -7,6 +18,7 @@ if sys.hexversion < 0x2070000:
 setup(name="gitticket",
       version='0.3',
       description="Git and issue tracking system integration",
+      long_description=read('README.rst'),
       author='Hiroyuki Tanaka',
       author_email='aflc0x@gmail.com',
       url='https://www.github.com/aflc/git-ticket',
