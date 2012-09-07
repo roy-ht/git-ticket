@@ -7,6 +7,16 @@ import functools
 
 
 def strwidth(s):
+    u"""
+    >>> strwidth('hello')
+    5
+    >>> strwidth(u'こんにちは')
+    10
+    >>> strwidth(123)
+    3
+    """
+    if not isinstance(s, basestring):
+        s = str(s)
     return sum(1 if ord(x) < 256 else 2 for x in s)
 
 
@@ -15,7 +25,9 @@ def cmd_stdout(arglist):
 
 
 def rmcomment(text):
-    u"""空行はそのまま、コメントのみの行は行ごと削除する
+    ur"""空行はそのまま、コメントのみの行は行ごと削除する
+    >>> rmcomment('hello # This is a comment\n# this is a comment\ncontent\n\nsecond content')
+    u'hello \ncontent\n\nsecond content'
     """
     r = []
     for line in text.split(u'\n'):
@@ -27,6 +39,12 @@ def rmcomment(text):
 
 
 def regex_extract(pattern, tgt, default=None):
+    ur"""
+    >>> regex_extract(ur'Title:[ ]*(.*?)$', u'Title: hogehoge\nfugafuga\n')
+    u'hogehoge'
+    >>> regex_extract(ur'a=(.*?), b=(.*?)$', u'a=one, b=two')
+    (u'one', u'two')
+    """
     r = re.search(pattern, tgt, re.M | re.S)
     if not r:
         return default
