@@ -63,9 +63,9 @@ def parseconfig():
     gconfig = git()
     config = {}
     config['name'] = gconfig.get('ticket.name', gconfig.get('user.name', None)) or sys.exit('Please set ticket.name or user.name to git config file')
-    config['repo'] = gconfig.get('ticket.repo', guess_repo_name())
+    config['repo'] = gconfig.get('ticket.repo', None) or guess_repo_name()
     from gitticket import github, bitbucket, redmine
-    config['service_name'] = gconfig.get('ticket.service', guess_service())
+    config['service_name'] = gconfig.get('ticket.service', None) or guess_service()
     config['service'] = {'github':github,
                          'bitbucket':bitbucket,
                          'redmine':redmine,
