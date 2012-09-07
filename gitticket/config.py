@@ -16,7 +16,7 @@ def is_inside_work_tree():
     return util.cmd_stdout(('git', 'rev-parse', '--is-inside-work-tree')) == 'true'
 
 
-def git_dir():
+def gitdir():
     if not is_inside_work_tree():
         return None
     return os.path.normpath(os.path.join(os.path.abspath(util.cmd_stdout(('git', 'rev-parse', '-q', '--git-dir'))), '..')) # .gitの一つ上
@@ -71,7 +71,7 @@ def guess_repo_name():
         if len(r) == 2:
             return r[1].replace('.git', '')
     # originが見つからなかったら、ディレクトリ名にする
-    return os.path.basename(git_dir())
+    return os.path.basename(gitdir())
 
 
 def guess_service():
