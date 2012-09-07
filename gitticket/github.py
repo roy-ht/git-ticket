@@ -179,10 +179,10 @@ def comment(number, params={}):
 
 def _issuedata_from_template(s):
     data = {}
-    title = util.regex_extract(ur'Title:[ ]*([^#]+?)[#\n]', s, '').strip()
-    assign = util.regex_extract(ur'Assign:[ ]*([^#]+?)[#\n]', s, '').strip()
-    lbls = util.regex_extract(ur'Labels:[ ]*([^#]+?)[#\n]', s, '').strip()
-    mstoneid = util.regex_extract(ur'MilestoneId:[ ]*([^#]+?)[#\n]', s, '').strip()
+    title = util.regex_extract(ur'Title:[ ]*([^#$]+?)[#$]', s, '').strip()
+    assign = util.regex_extract(ur'Assign:[ ]*([^#$]+?)[#$]', s, '').strip()
+    lbls = util.regex_extract(ur'Labels:[ ]*([^#$]+?)[#$]', s, '').strip()
+    mstoneid = util.regex_extract(ur'MilestoneId:[ ]*([^#$]+?)[#$]', s, '').strip()
     description = util.rmcomment(util.regex_extract(ur'Description:(.*)', s, '')).strip()
     if not title:
         raise ValueError('You must write a title')
