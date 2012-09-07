@@ -109,16 +109,12 @@ def labels(params={}):
 
 
 def add(params={}):
-    template = u"""Title: 
-# Available assignee: {assign}
-Assign: 
-# Available labels: {lbls}
-Labels: 
-MilestoneId: 
-
-Description:
-
-""".format(lbls=', '.join(labels()), assign=', '.join(assignees()))
+    template = ticket.template([{'name':'Title'},
+                               {'name':'Assign', 'comment':'Available assignee: {0}'.format(u', '.join(assignees()))},
+                               {'name':'Labels', 'comment':'Available labels: {0}'.format(u', '.join(labels()))},
+                               {'name':'MilestoneId'},
+                               {'name':'Description', 'multi':True}])
+    print template2
     val = util.inputwitheditor(template)
     data = _issuedata_from_template(val)
     cfg = config.parseconfig()
