@@ -5,61 +5,21 @@ import sys
 import re
 from gitticket import util
 
-def nested_access(d, keystr, default=None):
-    keys = keystr.split('.')
-    tgt = d
-    for k in keys:
-        if not tgt or k not in tgt:
-            return default
-        tgt = tgt[k]
-    return tgt
-
-def conftodict(config):
-    d = {}
-    for kstr, v in config.items():
-        keys = kstr.split('.')
-        nd = d
-        for k in keys[:-1]:
-            nd = nd.setdefault(k, {})
-        nd[keys[-1]] = v
-    return d
-    
 
 @util.memoize
 def git():
     rawstrs = util.cmd_stdout(('git', 'config', '-l')).split('\n')
     return dict(x.split('=', 1) for x in filter(None, rawstrs))
 
+
 def is_inside_work_tree():
     return util.cmd_stdout(('git', 'rev-parse', '--is-inside-work-tree')) == 'true'
+
 
 def git_dir():
     if not is_inside_work_tree():
         return None
     return os.path.normpath(os.path.join(os.path.abspath(util.cmd_stdout(('git', 'rev-parse', '-q', '--git-dir'))), '..')) # .gitの一つ上
-
-def guess_repo_name():
-    gcfg = git()
-    origin_url = gcfg.get('remote.origin.url', None)
-    if origin_url:
-        if not isurl(origin_url):
-            origin_url = originalurl(origin_url)
-        r = origin_url.rsplit('/', 1)
-        if len(r) == 2:
-            return r[1].replace('.git', '')
-    # originが見つからなかったら、ディレクトリ名にする
-    return os.path.basename(git_dir())
-
-def guess_service():
-    u"""github, bitbucketなどサービスをoriginのurlから推測する"""
-    gcfg = git()
-    origin_url = gcfg.get('remote.origin.url', None)
-    if 'github.com' in origin_url:
-        return 'github'
-    elif 'bitbucket.org' in origin_url:
-        return 'bitbucket'
-    else:
-        return ''
 
 
 @util.memoize
@@ -100,8 +60,35 @@ def parseconfig():
     config['rtoken'] = gconfig.get('ticket.redmine.token', None)
     return config
 
+
+def guess_repo_name():
+    gcfg = git()
+    origin_url = gcfg.get('remote.origin.url', None)
+    if origin_url:
+        if not isurl(origin_url):
+            origin_url = originalurl(origin_url)
+        r = origin_url.rsplit('/', 1)
+        if len(r) == 2:
+            return r[1].replace('.git', '')
+    # originが見つからなかったら、ディレクトリ名にする
+    return os.path.basename(git_dir())
+
+
+def guess_service():
+    u"""github, bitbucketなどサービスをoriginのurlから推測する"""
+    gcfg = git()
+    origin_url = gcfg.get('remote.origin.url', None)
+    if 'github.com' in origin_url:
+        return 'github'
+    elif 'bitbucket.org' in origin_url:
+        return 'bitbucket'
+    else:
+        return ''
+
+
 def isurl(s):
     return '://' in s
+
 
 def originalurl(s):
     gcfg = git()
@@ -114,3 +101,24 @@ def originalurl(s):
         if s.startswith(alias):
             return s.replace(alias, url, 1)
     return s # not aliased?
+
+
+def nested_access(d, keystr, default=None):
+    keys = keystr.split('.')
+    tgt = d
+    for k in keys:
+        if not tgt or k not in tgt:
+            return default
+        tgt = tgt[k]
+    return tgt
+
+
+def conftodict(config):
+    d = {}
+    for kstr, v in config.items():
+        keys = kstr.split('.')
+        nd = d
+        for k in keys[:-1]:
+            nd = nd.setdefault(k, {})
+        nd[keys[-1]] = v
+    return d
