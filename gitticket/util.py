@@ -40,6 +40,8 @@ def rmcomment(text):
 
 def regex_extract(pattern, tgt, default=None):
     ur"""
+    >>> regex_extract(ur'Title:[ ]*([^#]+?)[#\n]', u'Title: hogehoge\nfugafuga\n')
+    u'hogehoge'
     >>> regex_extract(ur'Title:[ ]*(.*?)$', u'Title: hogehoge\nfugafuga\n')
     u'hogehoge'
     >>> regex_extract(ur'a=(.*?), b=(.*?)$', u'a=one, b=two')
