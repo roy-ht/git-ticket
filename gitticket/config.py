@@ -25,6 +25,7 @@ def conftodict(config):
     return d
     
 
+@util.memoize
 def git():
     rawstrs = util.cmd_stdout(('git', 'config', '-l')).split('\n')
     return dict(x.split('=', 1) for x in filter(None, rawstrs))
@@ -60,6 +61,8 @@ def guess_service():
     else:
         return ''
 
+
+@util.memoize
 def parseconfig():
     u"""Parse git config key-values and set for issue handling.
     name: ticket.name 優先、user.nameが次点

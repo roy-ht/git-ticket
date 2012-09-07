@@ -3,6 +3,7 @@
 import subprocess as sp
 import tempfile
 import re
+import functools
 
 
 def strwidth(s):
@@ -46,3 +47,13 @@ def inputwitheditor(s):
     
     return open(tmpfile[1]).read().decode('utf-8')
 
+
+def memoize(obj):
+    cache = obj.cache = {}
+
+    @functools.wraps(obj)
+    def memoizer(*args, **kwargs):
+        if args not in cache:
+            cache[args] = obj(*args, **kwargs)
+        return cache[args]
+    return memoizer
