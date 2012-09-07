@@ -29,7 +29,8 @@ MILESTONE = os.path.join(MILESTONES, '{milestoneid}')
 DATEFMT = "%Y-%m-%dT%H:%M:%S%Z"
 
 def authorize(name, pswd):
-    r = requests.post(AUTH, data=json.dumps({'scopes':['repo'], 'note':'git-ticket'}), auth=(name, pswd))
+    cfg = config.parseconfig()
+    r = requests.post(AUTH, data=json.dumps({'scopes':['repo'], 'note':'git-ticket'}), auth=(name, pswd), verify=cfg['sslverify'])
     return r.json
 
 def issues(params={}):
@@ -68,7 +69,7 @@ def issue(number, params={}):
     if 'message' in j:
         raise ValueError('Invarid query: {0}'.format(j['message']))
     labels = [x['name'] for x in j['labels']]
-    cj = requests.get(ISSUE_COMMENTS.format(issueid=number, **cfg), params=params).json
+    cj = requests.get(ISSUE_COMMENTS.format(issueid=number, **cfg), params=params, verify=cfg['sslverify']).json
     if 'message' in cj:
         raise ValueError('Invarid query: {0}'.format(cj['message']))
     comments = [ticket.Comment({'id':x['id'],
@@ -207,9 +208,9 @@ def _request(rtype, url, params={}, data=None):
     if 'gtoken' in cfg:
         params['access_token'] = cfg['gtoken']
     if data:
-        return getattr(requests, rtype)(url, data=data, params=params)
+        return getattr(requests, rtype)(url, data=data, params=params, verify=cfg['sslverify'])
     else:
-        return getattr(requests, rtype)(url, params=params)
+        return getattr(requests, rtype)(url, params=params, verify=cfg['sslverify'])
 
     
 def todatetime(dstr):

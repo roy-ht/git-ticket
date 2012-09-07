@@ -69,6 +69,7 @@ def parseconfig():
     """
     gconfig = git()
     config = {}
+    # basic information
     config['name'] = gconfig.get('ticket.name', gconfig.get('user.name', None)) or sys.exit('Please set ticket.name or user.name to git config file')
     config['repo'] = gconfig.get('ticket.repo', None) or guess_repo_name()
     from gitticket import github, bitbucket, redmine
@@ -77,6 +78,12 @@ def parseconfig():
                          'bitbucket':bitbucket,
                          'redmine':redmine,
                          }.get(config['service_name'], None)
+    # ssl
+    config['sslverify'] = gconfig.get('http.sslVerify', 'true')
+    if config['sslverify'] in ('false', 'False', 'FALSE'):
+        config['sslverify'] = False
+    else:
+        config['sslverify'] = True
     # github
     config['gtoken'] = gconfig.get('ticket.github.token', None)
     # bitbucket

@@ -247,9 +247,9 @@ def _request(rtype, url, params={}, data=None, headers={}):
     # params['key'] = cfg['rtoken']
     auth = (cfg['rtoken'] or cfg['name'], cfg['rpassword'] or 'password')
     if data:
-        r = getattr(requests, rtype)(url, data=data, params=params, headers=headers, auth=auth)
+        r = getattr(requests, rtype)(url, data=data, params=params, headers=headers, auth=auth, verify=cfg['sslverify'])
     else:
-        r = getattr(requests, rtype)(url, params=params, headers=headers, auth=auth)
+        r = getattr(requests, rtype)(url, params=params, headers=headers, auth=auth, verify=cfg['sslverify'])
     if not 200 <= r.status_code < 300:
         print data
         raise requests.exceptions.HTTPError('[{0}] {1}'.format(r.status_code, r.url))

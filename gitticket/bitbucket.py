@@ -208,7 +208,7 @@ def _request(rtype, url, params={}, data=None):
                            access_token=cfg['btoken'], access_token_secret=cfg['btoken_secret'])
         session = requests.session(hooks={'pre_request': oauth})
     if data:
-        return getattr(session, rtype)(url, data=data, params=params)
+        return getattr(session, rtype)(url, data=data, params=params, verify=cfg['sslverify'])
     else:
         return getattr(session, rtype)(url, params=params)
 
