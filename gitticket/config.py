@@ -2,6 +2,7 @@
 # -*- coding:utf-8 -*-
 import os
 import sys
+import re
 from gitticket import util
 
 def nested_access(d, keystr, default=None):
@@ -37,15 +38,21 @@ def git_dir():
     return os.path.normpath(os.path.join(os.path.abspath(util.cmd_stdout(('git', 'rev-parse', '-q', '--git-dir'))), '..')) # .gitの一つ上
 
 def guess_repo_name():
-    origin_url = util.cmd_stdout(('git', 'config', '--get', 'remote.origin.url'))
+    gcfg = git()
+    origin_url = gcfg.get('remote.origin.url', None)
     if origin_url:
-        return origin_url.rsplit('/', 1)[1].replace('.git', '')
+        if not isurl(origin_url):
+            origin_url = originalurl(origin_url)
+        r = origin_url.rsplit('/', 1)
+        if len(r) == 2:
+            return r[1].replace('.git', '')
     # originが見つからなかったら、ディレクトリ名にする
     return os.path.basename(git_dir())
 
 def guess_service():
     u"""github, bitbucketなどサービスをoriginのurlから推測する"""
-    origin_url = util.cmd_stdout(('git', 'config', '--get', 'remote.origin.url'))
+    gcfg = git()
+    origin_url = gcfg.get('remote.origin.url', None)
     if 'github.com' in origin_url:
         return 'github'
     elif 'bitbucket.org' in origin_url:
@@ -82,3 +89,18 @@ def parseconfig():
     config['rpassword'] = gconfig.get('ticket.redmine.password', None)
     config['rtoken'] = gconfig.get('ticket.redmine.token', None)
     return config
+
+def isurl(s):
+    return '://' in s
+
+def originalurl(s):
+    gcfg = git()
+    urlkeys = filter(lambda x: x.startswith('url.'), gcfg.keys())
+    if not urlkeys:
+        return s # no alias
+    urlsettings = filter(None, (re.findall(ur'^url\.(.+)\.insteadof=(.+)', x) for x in urlkeys))
+    # (url, alias)
+    for url, alias in urlsettings:
+        if s.startswith(alias):
+            return s.replace(alias, url, 1)
+    return s # not aliased?
