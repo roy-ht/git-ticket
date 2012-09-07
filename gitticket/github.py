@@ -114,7 +114,6 @@ def add(params={}):
                                {'name':'Labels', 'comment':'Available labels: {0}'.format(u', '.join(labels()))},
                                {'name':'MilestoneId'},
                                {'name':'Description', 'multi':True}])
-    print template2
     val = util.inputwitheditor(template)
     data = _issuedata_from_template(val)
     cfg = config.parseconfig()
