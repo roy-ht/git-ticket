@@ -102,3 +102,13 @@ def humandate(dt):
     else:
         return 'just now'
 
+
+def template(defs):
+    t = u''
+    for item in defs:
+        if 'comment' in item:
+            t += u'## ' + item['comment'] + u'\n'
+        t += u'{name}: {default}\n'.format(name=item['name'], default=item.get('default', u''))
+        if item.get('multi', False):
+            t += u'\n'
+    return t
