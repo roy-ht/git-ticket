@@ -54,7 +54,7 @@ class Ticket(object):
         self.id = str(self.id)
         if not self.assign:
             self.assign = 'None'
-        if self.c:
+        if self.c is not None:
             self.c = str(self.c)
         self.create = humandate(self.create)
         self.update = humandate(self.update)
