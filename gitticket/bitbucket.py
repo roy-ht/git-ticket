@@ -104,17 +104,9 @@ def issue(number, params={}):
 
 
 def add(params={}):
-    template = u"""Title: 
-Assign: 
-# Available types: bug, enhancement, proposal, task
-Type: enhancement
-# Available priorities: trivial, minor, major, critical, blocker
-Priority: major
-Milestone:
-
-Description:
-
-"""
+    template = ticket.template(('title', 'assign', 'labels', 'priority', 'milestone', 'description'),
+                               labels={'disp':'type', 'comment':u'Available types: bug, enhancement, proposal, task'},
+                               priority={'comment':u'Available priorities: trivial, minor, major, critical, blocker'})
     val = util.inputwitheditor(template)
     data = _issuedata_from_template(val)
     cfg = config.parseconfig()
@@ -124,24 +116,16 @@ Description:
 
 def update(number, params={}):
     tic = issue(number, params)
-    template = u"""Title: {tic_title}
-Assign: {tic_assign}
-# Available types: bug, enhancement, proposal, task
-Type: {tic_type}
-Status: {tic_status}
-# Available priorities: trivial, minor, major, critical, blocker
-Priority: {tic_priority}
-Milestone: {tic_mstone}
-
-Description:
-{tic_content}
-""".format(tic_title=tic.title,
-           tic_assign=tic.assign if tic.assign != 'None' else u'',
-           tic_type=u', '.join(tic.labels),
-           tic_status=tic.state,
-           tic_priority=tic.priority,
-           tic_mstone=tic.milestone or u'',
-           tic_content=tic.body)
+    template = ticket.template(('title', 'assign', 'labels', 'status', 'priority', 'milestone', 'description'),
+                               title={'default':tic.title},
+                               assign={'default':tic.assign if tic.assign != 'None' else u'',},
+                               labels={'disp':'type', 'comment':u'Available types: bug, enhancement, proposal, task',
+                                       'default':u', '.join(tic.labels)},
+                               status={'default':tic.state},
+                               priority={'comment':u'Available priorities: trivial, minor, major, critical, blocker',
+                                         'default':tic.priority},
+                               milestone={'default':tic.milestone or u''},
+                               description={'default':tic.body})
     val = util.inputwitheditor(template)
     if val == template:
         return
@@ -173,29 +157,9 @@ def comment(number, params={}):
 
 
 def _issuedata_from_template(s):
-    data = {}
-    title = util.regex_extract(ur'Title:([^#]+?)[#\n]', s, '').strip()
-    assign = util.regex_extract(ur'Assign:([^#]+?)[#\n]', s, '').strip()
-    status = util.regex_extract(ur'Status:([^#]+?)[#\n]', s, '').strip()
-    kind = util.regex_extract(ur'Type:([^#]+?)[#\n]', s, '').strip()
-    priority = util.regex_extract(ur'Priority:([^#]+?)[#\n]', s, '').strip()
-    mstone = util.regex_extract(ur'Milestone:([^#]+?)[#\n]', s, '').strip()
-    description = util.rmcomment(util.regex_extract(ur'Description:(.*)', s, '')).strip()
-    if not title:
+    data = ticket.templatetodic(s, {'assign':'responsible', 'type':'kind', 'description':'content'})
+    if 'title' not in data:
         raise ValueError('You must write a title')
-    data['title'] = title
-    if assign:
-        data['responsible'] = assign
-    if kind:
-        data['kind'] = kind
-    if status:
-        data['status'] = status
-    if priority:
-        data['priority'] = priority
-    if mstone:
-        data['milestone'] = mstone
-    if description:
-        data['content'] = description
     return data
     
 
