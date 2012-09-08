@@ -92,6 +92,7 @@ def issue(number, params={}):
                         title = j['title'],
                         body = j['content'],
                         labels = [nested_access(j, 'metadata.kind')],
+                        priority = j['priority'],
                         milestone = nested_access(j, 'metadata.milestone'),
                         created_by = nested_access(j, 'reported_by.username'),
                         assign = nested_access(j, 'responsible.username'),
