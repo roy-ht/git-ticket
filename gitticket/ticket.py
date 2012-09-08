@@ -107,9 +107,8 @@ def template(disps, **kwargs):
     u"""dispsに作る項目名、kwargs[name]['default']にデフォルトで表示する項目、kwargs[name]['comment']にコメント表示する文字列、
     kwargs[name]['disp']に置き換える項目名を入れる
     <name> title, assign, labels, milestone
-    descriptionは共通化して、下部に入力されればOKとする
     """
-    names = ('title', 'assign', 'labels', 'milestone')
+    names = ('title', 'assign', 'labels', 'milestone', 'tracker', 'priority', 'status', 'description', 'notes')
     t = u''
     for name in names:
         if name in kwargs and 'comment' in kwargs[name]:
@@ -117,35 +116,33 @@ def template(disps, **kwargs):
     for name in names:
         if name not in disps:
             continue
-        disp = name.capitalize()
+        disp = name
         default = u''
         if name in kwargs:
             disp = kwargs[name].get('disp', disp)
             default = kwargs[name].get('default', default)
-        t += u'{0}: {1}\n'.format(disp, default)
-    # for description
-    t += u'##\n'
-    t += u'## description below here'
-    t += u'\n'
-    if 'description' in kwargs and 'default' in kwargs['description']:
-        t += kwargs['description']['default']
+        t += u':{0}: '.format(disp)
+        if name in ('description', 'notes'):
+            t += u'\n'
+        t += default + u'\n'
     return t
 
 def templatetodic(s, mapping={}):
     s = util.rmcomment(s)
     lines = s.split(u'\n')
     d = {}
+    name = None
     for line in lines:
-        content = line.split(u':', 1)
-        if len(content) == 1:
-            descname = mapping.get('description', 'description') # mapping for description
-            d[descname] = d.get(descname, u'') + line + u'\n'
-        else:
-            text = content[1].strip(u' ')
-            if not text:
-                continue
+        content = util.regex_extract(ur'^:(.+?):(.*)', line)
+        if content:
             name = content[0].replace(u' ', u'_').lower()
             name = mapping.get(name, name)
-            d[name] = text
+            d[name] = content[1].strip(u' ')
+        else: # 継続行とみなす
+            d[name] += u'\n' + line.rstrip(u' ')
+    for k, v in d.items():
+        d[k] = v.strip('\n')
+        if len(d[k]) == 0: # stringであることを暗に
+            del d[k]
     return d
     
