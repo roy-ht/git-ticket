@@ -111,7 +111,7 @@ v0.3.1
     * Fixed: remove debug prints
     * Updated: rewrite a tiket template generator
     * Fixed: At the bitbucket, forgot to display a priority when updating a ticket.
-    * Fixed: At the bitbucket, forgot to dicplay a status when updating a ticket.
+    * Fixed: At the Redmine, forgot to dicplay a status when updating a ticket.
 
 
 v0.3
