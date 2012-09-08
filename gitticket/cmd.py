@@ -9,21 +9,13 @@ from gitticket import display
 
 def show(opts):
     cfg = config.parseconfig()
-    try:
-        tic = cfg['service'].issue(opts['number'])
-    except ValueError as e:
-        print e
-        return
+    tic = cfg['service'].issue(opts['number'])
     print display.ticketdetail(tic)
 
 
 def list(opts):
     cfg = config.parseconfig()
-    try:
-        r = cfg['service'].issues(opts)
-    except ValueError as e:
-        print e
-        return
+    r = cfg['service'].issues(opts)
     if not r:
         print u'No tickets.\n'
     else:
@@ -32,39 +24,26 @@ def list(opts):
 
 def add(opts):
     cfg = config.parseconfig()
-    try:
-        r = cfg['service'].add()
-    except ValueError as e:
-        print e
-        return
+    r = cfg['service'].add()
     term = blessings.Terminal()
     print u'Added {term.green}#{0}{term.normal}\nURL: {1}\n'.format(r['number'], r['html_url'], term=term)
 
 
 def close(opts):
     cfg = config.parseconfig()
-    try:
-        if not opts['nocomment']:
-            cfg['service'].comment(opts['number'])
-        cfg['service'].changestate(opts['number'], 'closed')
-    except ValueError as e:
-        print e
+    if not opts['nocomment']:
+        cfg['service'].comment(opts['number'])
+    cfg['service'].changestate(opts['number'], 'closed')
 
 
 def update(opts):
     cfg = config.parseconfig()
-    try:
-        cfg['service'].update(opts['number'])
-    except ValueError as e:
-        print e
+    cfg['service'].update(opts['number'])
 
 
 def comment(opts):
     cfg = config.parseconfig()
-    try:
-        cfg['service'].comment(opts['number'])
-    except ValueError as e:
-        print e
+    cfg['service'].comment(opts['number'])
 
 
 def github_auth(opts):
