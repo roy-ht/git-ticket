@@ -27,7 +27,7 @@ class Comment(object):
         
 
 class Ticket(object):
-    def __init__(self, dct):
+    def __init__(self, **dct):
         self.id = dct['id']
         self.state = dct['state']
         self.title = dct['title']

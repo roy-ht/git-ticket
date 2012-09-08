@@ -41,14 +41,14 @@ def issues(params={}):
     for j in r['issues']:
         create = todatetime(j['created_on'])
         update = todatetime(j['updated_on'])
-        t = ticket.Ticket({'id':j['id'],
-                           'state':nested_access(j, 'status.name'),
-                           'title':j['subject'],
-                           'body':j.get('description', ''),
-                           'created_by':nested_access(j, 'author.name'),
-                           'assign':nested_access(j, 'assigned_to.name'),
-                           'create':create,
-                           'update':update})
+        t = ticket.Ticket(id = j['id'],
+                          state = nested_access(j, 'status.name'),
+                          title = j['subject'],
+                          body = j.get('description', ''),
+                          created_by = nested_access(j, 'author.name'),
+                          assign = nested_access(j, 'assigned_to.name'),
+                          create = create,
+                          update = update)
         tickets.append(t)
     return tickets
     
@@ -57,17 +57,17 @@ def issue(number, params={}):
     params['include'] = u','.join(('journals', 'children', 'changesets'))
     j = _request('get', ISSUE.format(issueid=number, **cfg), params=params).json['issue']
     comments = [ticket.Comment(_parse_journal(x)) for x in reversed(j['journals'])]
-    tic = ticket.Ticket({'id':j['id'],
-                         'state':nested_access(j, 'status.name'),
-                         'priority':nested_access(j, 'priority.name'),
-                         'title':j['subject'],
-                         'labels':[nested_access(j, 'tracker.name')],
-                         'body':j.get('description', u''),
-                         'created_by':nested_access(j, 'author.name'),
-                         'assign':nested_access(j, 'assigned_to.name'),
-                         'comments':comments,
-                         'create':todatetime(j['created_on']),
-                         'update':todatetime(j['updated_on'])})
+    tic = ticket.Ticket(id = j['id'],
+                        state = nested_access(j, 'status.name'),
+                        priority = nested_access(j, 'priority.name'),
+                        title = j['subject'],
+                        labels = [nested_access(j, 'tracker.name')],
+                        body = j.get('description', u''),
+                        created_by = nested_access(j, 'author.name'),
+                        assign = nested_access(j, 'assigned_to.name'),
+                        comments = comments,
+                        create = todatetime(j['created_on']),
+                        update = todatetime(j['updated_on']))
     # additional attributes
     tic.priority_id = nested_access(j, 'priority.id')
 

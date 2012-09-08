@@ -49,16 +49,16 @@ def issues(params={}):
         create = todatetime(j['created_at'])
         update = todatetime(j['updated_at'])
         closed = todatetime(j['closed_at'])
-        t = ticket.Ticket({'id':j['number'],
-                           'state':j['state'],
-                           'title':j['title'],
-                           'body':j['body'],
-                           'created_by':nested_access(j, 'user.login'),
-                           'assign':nested_access(j, 'assignee.login'),
-                           'commentnum':j['comments'],
-                           'create':create,
-                           'update':update,
-                           'closed':closed})
+        t = ticket.Ticket(id = j['number'],
+                          state = j['state'],
+                          title = j['title'],
+                          body = j['body'],
+                          created_by = nested_access(j, 'user.login'),
+                          assign = nested_access(j, 'assignee.login'),
+                          commentnum = j['comments'],
+                          create = create,
+                          update = update,
+                          closed = closed)
         tickets.append(t)
     return tickets
     
@@ -78,21 +78,20 @@ def issue(number, params={}):
                                 'create':todatetime(x['created_at']),
                                 'update':todatetime(x['updated_at']),
                                 }) for x in cj]
-    tic = ticket.Ticket({'id':j['number'],
-                         'state':j['state'],
-                         'title':j['title'],
-                         'body':j['body'],
-                         'closed_by':j['closed_by'],
-                         'labels':labels,
-                         'milestone':j['milestone'],
-                         'created_by':nested_access(j, 'user.login'),
-                         'assign':nested_access(j, 'assignee.login'),
-                         'commentnum':j['comments'],
-                         'create':todatetime(j['created_at']),
-                         'update':todatetime(j['updated_at']),
-                         'closed':todatetime(j['updated_at']),
-                         'comments':comments,
-                         })
+    tic = ticket.Ticket(id = j['number'],
+                        state = j['state'],
+                        title = j['title'],
+                        body = j['body'],
+                        closed_by = j['closed_by'],
+                        labels = labels,
+                        milestone = j['milestone'],
+                        created_by = nested_access(j, 'user.login'),
+                        assign = nested_access(j, 'assignee.login'),
+                        commentnum = j['comments'],
+                        create = todatetime(j['created_at']),
+                        update = todatetime(j['updated_at']),
+                        closed = todatetime(j['updated_at']),
+                        comments = comments)
     return tic
 
 
