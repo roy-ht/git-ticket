@@ -103,12 +103,47 @@ def humandate(dt):
         return 'just now'
 
 
-def template(defs):
+def template(disps, **kwargs):
+    u"""dispsに作る項目名、kwargs[name]['default']にデフォルトで表示する項目、kwargs[name]['comment']にコメント表示する文字列、
+    kwargs[name]['disp']に置き換える項目名を入れる
+    <name> title, assign, labels, milestone
+    descriptionは共通化して、下部に入力されればOKとする
+    """
+    names = ('title', 'assign', 'labels', 'milestone')
     t = u''
-    for item in defs:
-        if 'comment' in item:
-            t += u'## ' + item['comment'] + u'\n'
-        t += u'{name}: {default}\n'.format(name=item['name'], default=item.get('default', u''))
-        if item.get('multi', False):
-            t += u'\n'
+    for name in names:
+        if name in kwargs and 'comment' in kwargs[name]:
+            t += u'## {0}\n'.format(kwargs[name]['comment'])
+    for name in names:
+        if name not in disps:
+            continue
+        disp = name.capitalize()
+        default = u''
+        if name in kwargs:
+            disp = kwargs[name].get('disp', disp)
+            default = kwargs[name].get('default', default)
+        t += u'{0}: {1}\n'.format(disp, default)
+    # for description
+    t += u'##\n'
+    t += u'## description below here'
+    t += u'\n\n'
     return t
+
+def templatetodic(s, mapping={}):
+    s = util.rmcomment(s)
+    lines = s.split(u'\n')
+    d = {}
+    for line in lines:
+        content = line.split(u':', 1)
+        if len(content) == 1:
+            descname = mapping.get('description', 'description') # mapping for description
+            d[descname] = d.get(descname, u'') + line + u'\n'
+        else:
+            text = content[1].strip(u' ')
+            if not text:
+                continue
+            name = content[0].replace(u' ', u'_').lower()
+            name = mapping.get(name, name)
+            d[name] = text
+    return d
+    
