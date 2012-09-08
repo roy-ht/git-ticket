@@ -110,8 +110,7 @@ def update(number, params={}):
                                priority={'comment':u'Available priorities: 3-7 (low to high)',
                                          'default':str(tic.priority_id)},
                                status={'comment':u'Available statuses: {0}'.format(u', '.join(statuses())),
-                                       # TODO: add status 'default':
-                                       },
+                                       'default':tic.state},
                                description={'default':tic.body})
     val = util.inputwitheditor(template)
     if val == template:
