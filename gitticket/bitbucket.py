@@ -80,8 +80,7 @@ def issue(number, params={}):
     j = _request('get', ISSUE.format(issueid=number, **cfg), params=params).json
     cj = _request('get', ISSUE_COMMENTS.format(issueid=number, **cfg), {'limit':50}).json
     cj = [x for x in cj if x['content'] is not None]
-    # commentは特殊。statusの変更がコメント化され、APIからは補足できないので
-    # その手のコメントは削る必要がある。
+    # commentは特殊。statusの変更がコメント化され、Web上では表示できるが、APIからは補足できない。
     comments = [ticket.Comment({'id':x['comment_id'],
                                 'body':x['content'] or u'',
                                 'created_by':nested_access(x, 'author_info.username'),
