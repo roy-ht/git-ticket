@@ -226,7 +226,6 @@ def _request(rtype, url, params={}, data=None, headers={}):
     else:
         r = getattr(requests, rtype)(url, params=params, headers=headers, auth=auth, verify=cfg['sslverify'])
     if not 200 <= r.status_code < 300:
-        print data
         raise requests.exceptions.HTTPError('[{0}] {1}'.format(r.status_code, r.url))
     return r
 
