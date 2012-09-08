@@ -103,6 +103,17 @@ close a ticket
 ReleaseNote
 -----------
 
+v0.3.1
+    * Fixed: crash if comment number is 0.
+    * Fixed: fixed #13
+    * Fixed: fixed #12 Change SSL settings with git's http.sslVerify configuration.
+    * Added: memoizing feature to parseconfig(); reduce repetitive process calls.
+    * Fixed: remove debug prints
+    * Updated: rewrite a tiket template generator
+    * Fixed: At the bitbucket, forgot to display a priority when updating a ticket.
+    * Fixed: At the bitbucket, forgot to dicplay a status when updating a ticket.
+
+
 v0.3
     Initial release
 
