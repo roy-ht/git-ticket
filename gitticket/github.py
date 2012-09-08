@@ -39,8 +39,7 @@ def issues(params={}):
     if 'state' in params and params['state'] not in ('open', 'closed'):
         raise ValueError('Invarid query: available state are (open, closed)')
     if 'order' in params:
-        params['sort'] = params['order']
-        del params['order']
+        params['sort'] = params.pop('order')
     r = _request('get', url, params=params).json
     if 'message' in r:
         raise ValueError('Invarid query: {0}'.format(r['message']))
