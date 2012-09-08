@@ -107,7 +107,7 @@ def labels(params={}):
 
 
 def add(params={}):
-    template = ticket.template(('title', 'assign', 'labels', 'milestone'),
+    template = ticket.template(('title', 'assign', 'labels', 'milestone', 'description'),
                                assign={'comment':'Available assignee: {0}'.format(u', '.join(assignees()))},
                                labels={'comment':'Available labels: {0}'.format(u', '.join(labels()))},
                                milestone={'disp':'Milestone Id'})
@@ -122,7 +122,7 @@ def add(params={}):
 
 def update(number, params={}):
     tic = issue(number, params)
-    template = ticket.template(('title', 'assign', 'labels', 'milestone'),
+    template = ticket.template(('title', 'assign', 'labels', 'milestone', 'description'),
                                title={'default':tic.title},
                                assign={'comment':'Available assignee: {0}'.format(u', '.join(assignees())),
                                        'default':tic.assign if tic.assign != 'None' else u''},
