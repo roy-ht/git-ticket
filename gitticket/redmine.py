@@ -75,19 +75,14 @@ def issue(number, params={}):
 
 
 def add(params={}):
-    template = u"""Title:
-# Available assignees: {assignees}
-Assign:
-# Available trackers: {trackers}
-Tracker:
-# Available priorities: 3-7 (low to high)
-Priority: 
-# Available statuses: {statuses}
-Status: 
-Description:
-
-""".format(trackers=u', '.join(trackers()), statuses=u', '.join(statuses()),
-           assignees=u', '.join(u'{login}({name})'.format(login=x, name=y['name']) for x, y in assignees().items()))
+    asgns = u', '.join(u'{login}({name})'.format(login=x, name=y['name']) for x, y in assignees().items())
+    trks = u', '.join(trackers())
+    template = ticket.template(('title', 'assign', 'tracker', 'priority', 'status', 'description'),
+                               assign={'comment':u'Available assignee: {0}'.format(asgns)},
+                               tracker={'comment':u'Available trackers: {0}'.format(trks)},
+                               priority={'comment':u'Available priorities: 3-7 (low to high)'},
+                               status={'comment':u'Available statuses: {0}'.format(u', '.join(statuses()))},
+                               )
     val = util.inputwitheditor(template)
     data = _issuedata_from_template(val)
     cfg = config.parseconfig()
@@ -97,33 +92,27 @@ Description:
 
 
 def update(number, params={}):
-    tic = issue(number, params)
     nees = assignees()
-    assignee = 'None'
-    if tic.assign != 'None':
+    tic = issue(number, params)
+    asgns = u', '.join(u'{login}({name})'.format(login=x, name=y['name']) for x, y in nees.items())
+    trks = u', '.join(trackers())
+    # FIXME: この部分は表示名がかぶるとエラーになる恐れがある。
+    assignee = u'None'
+    if tic.assign != u'None':
         cand = [x for x, y in nees.items() if y['name'] == tic.assign]
         assignee = cand[0] if len(cand) == 1 else 'Not found'
-    template = u"""Title: {tic.title}
-# Available assignees: {assignees}
-Assign: {tic_assign}
-# Available trackers: {trackers}
-Tracker: {tic_tracker}
-# Available priorities: 3-7 (low to high)
-Priority: {tic.priority_id}
-# Available statuses: {statuses}
-Status: 
-Description:
-{tic.body}
-
-Notes:
-
-""".format(trackers=u', '.join(trackers()),
-           statuses=u', '.join(statuses()),
-           assignees=u', '.join(u'{login}({name})'.format(login=x, name=y['name']) for x, y in nees.items()),
-           tic=tic,
-           tic_assign=assignee,
-           tic_tracker=u', '.join(tic.labels))
-           
+    template = ticket.template(('title', 'assign', 'tracker', 'priority', 'status', 'description', 'notes'),
+                               title={'default':tic.title},
+                               assign={'comment':u'Available assignee: {0}'.format(asgns),
+                                       'default':assignee},
+                               tracker={'comment':u'Available trackers: {0}'.format(trks),
+                                        'default':u', '.join(tic.labels)},
+                               priority={'comment':u'Available priorities: 3-7 (low to high)',
+                                         'default':str(tic.priority_id)},
+                               status={'comment':u'Available statuses: {0}'.format(u', '.join(statuses())),
+                                       # TODO: add status 'default':
+                                       },
+                               description={'default':tic.body})
     val = util.inputwitheditor(template)
     if val == template:
         return
@@ -193,29 +182,15 @@ def assignees():
 
 
 def _issuedata_from_template(s):
-    data = {}
-    title = util.regex_extract(ur'Title:([^#\n]+?)[#\n]', s, '').strip()
-    assign = util.regex_extract(ur'Assign:([^#\n]+?)[#\n]', s, '').strip()
-    tracker = util.regex_extract(ur'Tracker:([^#\n]+?)[#\n]', s, '').strip()
-    priority = util.regex_extract(ur'Priority:([^#\n]+?)[#\n]', s, '').strip()
-    status = util.regex_extract(ur'Status:([^#\n]+?)[#\n]', s, '').strip()
-    notes = util.regex_extract(ur'Notes:(.*)', s, '').strip()
-    description = util.rmcomment(util.regex_extract(ur'Description:(.*?)Notes:', s, '')).strip()
-    if not title:
+    data = ticket.templatetodic(s, {'title':'subject', 'priority':'proirity_id'})    
+    if 'subject' not in data:
         raise ValueError('You must write a title')
-    data['subject'] = title
-    if assign:
-        data['assigned_to_id'] = assignees()[assign]
-    if tracker:
-        data['tracker_id'] = trackers()[tracker]
-    if priority:
-        data['priority_id'] = priority
-    if status:
-        data['status_id'] = statuses()[status]
-    if description:
-        data['description'] = description
-    if notes:
-        data['notes'] = notes
+    if 'assign' in data:
+        data['assigned_to_id'] = assignees()[data.pop('assign')]
+    if 'tracker' in data:
+        data['tracker_id'] = trackers()[data.pop('tracker')]
+    if 'status' in data:
+        data['status_id'] = statuses()[data.pop('status')]
     return {'issue':data}
 
 
