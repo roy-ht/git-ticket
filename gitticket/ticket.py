@@ -126,7 +126,9 @@ def template(disps, **kwargs):
     # for description
     t += u'##\n'
     t += u'## description below here'
-    t += u'\n\n'
+    t += u'\n'
+    if 'description' in kwargs and 'default' in kwargs['description']:
+        t += kwargs['description']['default']
     return t
 
 def templatetodic(s, mapping={}):

@@ -109,11 +109,10 @@ def labels(params={}):
 
 
 def add(params={}):
-    template = ticket.template([{'name':'Title'},
-                               {'name':'Assign', 'comment':'Available assignee: {0}'.format(u', '.join(assignees()))},
-                               {'name':'Labels', 'comment':'Available labels: {0}'.format(u', '.join(labels()))},
-                               {'name':'MilestoneId'},
-                               {'name':'Description', 'multi':True}])
+    template = ticket.template(('title', 'assign', 'labels', 'milestone'),
+                               assign={'comment':'Available assignee: {0}'.format(u', '.join(assignees()))},
+                               labels={'comment':'Available labels: {0}'.format(u', '.join(labels()))},
+                               milestone={'disp':'Milestone Id'})
     val = util.inputwitheditor(template)
     data = _issuedata_from_template(val)
     cfg = config.parseconfig()
@@ -122,6 +121,28 @@ def add(params={}):
         raise ValueError('Request Error: {0}'.format(r['message']))
     else:
         return r
+
+def update(number, params={}):
+    tic = issue(number, params)
+    template = ticket.template(('title', 'assign', 'labels', 'milestone'),
+                               title={'default':tic.title},
+                               assign={'comment':'Available assignee: {0}'.format(u', '.join(assignees())),
+                                       'default':tic.assign if tic.assign != 'None' else u''},
+                               labels={'comment':'Available labels: {0}'.format(u', '.join(labels())),
+                                       'default':u', '.join(tic.labels)},
+                               milestone={'disp':'Milestone Id', 'default':tic.milestone.get('number', u'')},
+                               description={'default':tic.body})
+    val = util.inputwitheditor(template)
+    if val == template:
+        return
+    data = _issuedata_from_template(val)
+    cfg = config.parseconfig()
+    r = _request('patch', ISSUE.format(issueid=number, **cfg), data=json.dumps(data), params=params).json
+    if 'message' in r:
+        raise ValueError('Request Error: {0}'.format(r['message']))
+    else:
+        return r
+
 
 def changestate(number, state):
     if state not in ('open', 'closed'):
@@ -134,36 +155,6 @@ def changestate(number, state):
     else:
         return r
     
-
-def update(number, params={}):
-    tic = issue(number, params)
-    template = u"""Title: {tic_title}
-# Available assignee: {assign}
-Assign: {tic_assign}
-# Available labels: {lbls}
-Labels: {tic_lbls}
-MilestoneId: {tic_mstoneid}
-
-Description:
-{tic_body}
-""".format(lbls=u', '.join(labels()),
-           assign=u', '.join(assignees()),
-           tic_title=tic.title,
-           tic_assign=tic.assign if tic.assign != 'None' else u'',
-           tic_lbls=u', '.join(tic.labels),
-           tic_mstoneid=tic.milestone.get('number', ''),
-           tic_body=tic.body)
-    val = util.inputwitheditor(template)
-    if val == template:
-        return
-    data = _issuedata_from_template(val)
-    cfg = config.parseconfig()
-    r = _request('patch', ISSUE.format(issueid=number, **cfg), data=json.dumps(data), params=params).json
-    if 'message' in r:
-        raise ValueError('Request Error: {0}'.format(r['message']))
-    else:
-        return r
-
 
 def comment(number, params={}):
     template = """# comment below here\n"""
@@ -178,23 +169,13 @@ def comment(number, params={}):
     
 
 def _issuedata_from_template(s):
-    data = {}
-    title = util.regex_extract(ur'Title:[ ]*([^#$]+?)[#$]', s, '').strip()
-    assign = util.regex_extract(ur'Assign:[ ]*([^#$]+?)[#$]', s, '').strip()
-    lbls = util.regex_extract(ur'Labels:[ ]*([^#$]+?)[#$]', s, '').strip()
-    mstoneid = util.regex_extract(ur'MilestoneId:[ ]*([^#$]+?)[#$]', s, '').strip()
-    description = util.rmcomment(util.regex_extract(ur'Description:(.*)', s, '')).strip()
-    if not title:
+    data = ticket.templatetodic(s, {'assign':'assignee', 'milestone_id':'milestone', 'description':'body'})
+    if 'title' not in data:
         raise ValueError('You must write a title')
-    data['title'] = title
-    if assign:
-        data['assignee'] = assign
-    if lbls:
-        data['labels'] = [x.strip() for x in lbls.split(u',')]
-    if mstoneid:
-        data['milestone'] = mstoneid
-    if description:
-        data['body'] = description
+    if 'labels' in data:
+        data['labels'] = [x.strip() for x in data['labels'].split(u',')]
+    if 'milestone' in data:
+        data['milestone'] = int(data['milestone'])
     return data
     
 
