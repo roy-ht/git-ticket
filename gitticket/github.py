@@ -181,10 +181,15 @@ def _request(rtype, url, params={}, data=None):
     cfg = config.parseconfig()
     if 'gtoken' in cfg:
         params['access_token'] = cfg['gtoken']
+    r = None
     if data:
-        return getattr(requests, rtype)(url, data=data, params=params, verify=cfg['sslverify'])
+        r = getattr(requests, rtype)(url, data=data, params=params, verify=cfg['sslverify'])
     else:
-        return getattr(requests, rtype)(url, params=params, verify=cfg['sslverify'])
+        r = getattr(requests, rtype)(url, params=params, verify=cfg['sslverify'])
+    if not 200 <= r.status_code < 300:
+        raise requests.exceptions.HTTPError('[{0}] {1}'.format(r.status_code, r.url))
+    return r
+
 
     
 def todatetime(dstr):

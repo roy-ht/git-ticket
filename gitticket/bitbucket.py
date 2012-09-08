@@ -170,10 +170,14 @@ def _request(rtype, url, params={}, data=None):
         oauth = OAuth1Hook(CONSUMER_KEY, CONSUMER_SECRET,
                            access_token=cfg['btoken'], access_token_secret=cfg['btoken_secret'])
         session = requests.session(hooks={'pre_request': oauth})
+    r = None
     if data:
-        return getattr(session, rtype)(url, data=data, params=params, verify=cfg['sslverify'])
+        r = getattr(session, rtype)(url, data=data, params=params, verify=cfg['sslverify'])
     else:
-        return getattr(session, rtype)(url, params=params)
+        r = getattr(session, rtype)(url, params=params)
+    if not 200 <= r.status_code < 300:
+        raise requests.exceptions.HTTPError('[{0}] {1}'.format(r.status_code, r.url))
+    return r
 
     
 def todatetime(dstr):
