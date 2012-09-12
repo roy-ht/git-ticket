@@ -4,6 +4,7 @@ from datetime import datetime
 import time
 import calendar
 from gitticket import util
+import blessings
 
 class Comment(object):
     def __init__(self, dct):
@@ -27,6 +28,7 @@ class Comment(object):
         
 
 class Ticket(object):
+    _list_format = u'{t.green}#{s.id}{t.normal} [{t.cyan}{s.state}{t.normal}] ({t.yellow}{s.update}{t.normal}) {s.title} - {t.magenta}{s.assign}{t.normal}'
     def __init__(self, **dct):
         self.id = dct['id']
         self.state = dct['state']
@@ -38,24 +40,24 @@ class Ticket(object):
         self.body = dct['body'] or u''
         # オプション
         self.priority = dct.get('priority', None)
-        self.c = dct.get('commentnum', None)
+        self.commentnum = dct.get('commentnum', None)
         self.closed = dct.get('closed', None) # datetime
         self.labels = dct.get('labels', None) or []
-        self.milestone = dct.get('milestone', None) or {}
+        self.milestone = dct.get('milestone', None) or {} # TODO: milestoneをもっと詳細化
         self.closed_by = dct.get('closed_by', None)
         self.comments = dct.get('comments', None)
-        
-        self._format()
+
+        self._init()  # reformatting
 
     def __getitem__(self, name):
         return getattr(self, name)
 
-    def _format(self):
+    def _init(self):
         self.id = str(self.id)
         if not self.assign:
             self.assign = 'None'
-        if self.c is not None:
-            self.c = str(self.c)
+        if self.commentnum is not None:
+            self.commentnum = str(self.commentnum)
         self.create = humandate(self.create)
         self.update = humandate(self.update)
         self.closed = humandate(self.closed)
@@ -63,13 +65,13 @@ class Ticket(object):
             self.closed_by = 'None'
         # self.milestone = str(self.milestone)
 
-    def tostr(self, name, width):
-        tgt = getattr(self, name)
-        if util.strwidth(tgt) > width:
-            while util.strwidth(tgt) + 2 > width:
-                tgt = tgt[:-1]
-            tgt += u'..'
-        return tgt + u' ' * (width - util.strwidth(tgt))
+    def format(self, template=None):
+        if template is None:
+            template = Ticket._list_format
+        term = blessings.Terminal()
+        # s == self, t == term
+        return template.format(s=self, t=term)
+
         
 def utctolocal(dt):
     u"""convert UTC+0000 datetime.datetime to local datetime.datetime

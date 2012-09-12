@@ -15,11 +15,12 @@ def show(opts):
 
 def list(opts):
     cfg = config.parseconfig()
-    r = cfg['service'].issues(opts)
-    if not r:
+    tickets = cfg['service'].issues(opts)
+    if not tickets:
         print u'No tickets.\n'
     else:
-        print display.ticketlist(r)
+        for tic in tickets:
+            print tic.format()
 
 
 def add(opts):
