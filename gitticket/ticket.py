@@ -7,6 +7,10 @@ from gitticket import util
 import blessings
 
 class Comment(object):
+    _format = u'''Comment {t.green}#{s.id}{t.normal} {t.magenta}{s.created_by}{t.normal} at {t.yellow}{s.update}{t.normal}
+{hline}
+{s.body}
+'''
     def __init__(self, dct):
         self.id = dct['id']
         self.body = dct['body']
@@ -15,20 +19,36 @@ class Comment(object):
         # option value
         self.update = dct.get('update', None) # datetime
 
-        self._format()
+        self._init()
 
     def __getitem__(self, name):
         return getattr(self, name)
 
-    def _format(self):
+    def _init(self):
         self.id = str(self.id)
         self.create = humandate(self.create)
         if self.update:
             self.update = humandate(self.update)
+        else:
+            self.update = self.create
+        self.body = self.body.rstrip()
+
+    def format(self, template=None):
+        term = blessings.Terminal()
+        if template is None:
+            template = Comment._format
+            
+        return template.format(s=self, t=term, hline=horline(), hhline=horline(u'='))
         
 
 class Ticket(object):
-    _list_format = u'{t.green}#{s.id}{t.normal} [{t.cyan}{s.state}{t.normal}] ({t.yellow}{s.update}{t.normal}) {s.title} - {t.magenta}{s.assign}{t.normal}'
+    _list_format = u'[{t.cyan}{s.state}{t.normal}] {t.red}#{s.id}{t.normal} ({t.yellow}{s.update}{t.normal}) {s.title} - {t.magenta}{s.assign}{t.normal}'
+    _show_format = u'''
+    [{t.cyan}{s.state}{t.normal}][{t.green}{s.labels}{t.normal}] {s.title}
+    created by {t.magenta}{s.assign}{t.normal} at {t.yellow}{s.create}{t.normal}, updated at {t.yellow}{s.update}{t.normal}
+
+{s.body}
+'''
     def __init__(self, **dct):
         self.id = dct['id']
         self.state = dct['state']
@@ -42,11 +62,9 @@ class Ticket(object):
         self.priority = dct.get('priority', None)
         self.commentnum = dct.get('commentnum', None)
         self.closed = dct.get('closed', None) # datetime
-        self.labels = dct.get('labels', None) or []
+        self._rawlabels = dct.get('labels', None) or []
         self.milestone = dct.get('milestone', None) or {} # TODO: milestoneをもっと詳細化
         self.closed_by = dct.get('closed_by', None)
-        self.comments = dct.get('comments', None)
-
         self._init()  # reformatting
 
     def __getitem__(self, name):
@@ -63,14 +81,15 @@ class Ticket(object):
         self.closed = humandate(self.closed)
         if not self.closed_by:
             self.closed_by = 'None'
+        self.labels = u', '.join(self._rawlabels)
         # self.milestone = str(self.milestone)
 
     def format(self, template=None):
+        term = blessings.Terminal()
         if template is None:
             template = Ticket._list_format
-        term = blessings.Terminal()
         # s == self, t == term
-        return template.format(s=self, t=term)
+        return template.format(s=self, t=term, hline=horline(), hhline=horline(u'='))
 
         
 def utctolocal(dt):
@@ -148,3 +167,13 @@ def templatetodic(s, mapping={}):
             del d[k]
     return d
     
+
+def termwidth():
+    term = blessings.Terminal()
+    if not term.width:
+        return 80
+    return term.width
+
+
+def horline(linestr=u'-'):
+    return linestr * termwidth()
