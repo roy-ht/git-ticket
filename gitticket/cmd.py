@@ -10,9 +10,9 @@ from gitticket import display
 def show(opts):
     cfg = config.parseconfig()
     ticket, comments = cfg['service'].issue(opts['number'])
-    print ticket.format(ticket._show_format)
+    print ticket.format(cfg['format_show'] or ticket._show_format)
     for comment in comments:
-        print comment.format()
+        print comment.format(cfg['format_comment'])
 
 
 def list(opts):
@@ -22,7 +22,7 @@ def list(opts):
         print u'No tickets.\n'
     else:
         for tic in tickets:
-            print tic.format()
+            print tic.format(cfg['format_list'])
 
 
 def add(opts):

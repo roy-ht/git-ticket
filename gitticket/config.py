@@ -47,6 +47,10 @@ def parseconfig():
         config['sslverify'] = False
     else:
         config['sslverify'] = True
+    # list and show formatting
+    config['format_list'] = gconfig.get('ticket.format.list', None)
+    config['format_show'] = gconfig.get('ticket.format.show', None)
+    config['format_comment'] = gconfig.get('ticket.format.comment', None)
     # github
     config['gtoken'] = gconfig.get('ticket.github.token', None)
     # bitbucket
