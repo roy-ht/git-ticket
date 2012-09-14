@@ -46,7 +46,7 @@ class Comment(object):
         
 
 class Ticket(object):
-    _list_format = u'{s[state___colcyan_preb_postn_l23]} {t.red}#{s.id}{t.normal} ({t.yellow}{s.update}{t.normal}) {s.title} - {t.magenta}{s.assign}{t.normal}'
+    _list_format = u'{s[state___colcyan_preb_postn_l23]} {s[id__pre#_colred]} ({s[update__colyellow]}) {s.title} - {s[assign__colmagenta]}'
     _show_format = u'''
     [{t.cyan}{s.state}{t.normal}][{t.green}{s.labels}{t.normal}] {s.title}
     created by {t.magenta}{s.assign}{t.normal} at {t.yellow}{s.create}{t.normal}, updated at {t.yellow}{s.update}{t.normal}
