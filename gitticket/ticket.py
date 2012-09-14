@@ -6,6 +6,10 @@ import calendar
 from gitticket import util
 import blessings
 
+
+g_term = blessings.Terminal()
+
+
 class Comment(object):
     _format = u'''Comment {t.green}#{s.id}{t.normal} {t.magenta}{s.created_by}{t.normal} at {t.yellow}{s.update}{t.normal}
 {hline}
@@ -42,7 +46,7 @@ class Comment(object):
         
 
 class Ticket(object):
-    _list_format = u'[{t.cyan}{s.state}{t.normal}] {t.red}#{s.id}{t.normal} ({t.yellow}{s.update}{t.normal}) {s.title} - {t.magenta}{s.assign}{t.normal}'
+    _list_format = u'{s[state___colcyan_preb_postn_l23]} {t.red}#{s.id}{t.normal} ({t.yellow}{s.update}{t.normal}) {s.title} - {t.magenta}{s.assign}{t.normal}'
     _show_format = u'''
     [{t.cyan}{s.state}{t.normal}][{t.green}{s.labels}{t.normal}] {s.title}
     created by {t.magenta}{s.assign}{t.normal} at {t.yellow}{s.create}{t.normal}, updated at {t.yellow}{s.update}{t.normal}
@@ -68,7 +72,28 @@ class Ticket(object):
         self._init()  # reformatting
 
     def __getitem__(self, name):
-        return getattr(self, name)
+        if name.count('__') != 1:
+            return getattr(self, name)
+        l = name.split(u'__')
+        key, args = l
+        args = args.split(u'_')
+        r = self[key]
+        for arg in args:
+                ## r1, l5, c24 等でアライメント
+            if arg.startswith('pre'):
+                p = arg[3:]
+                r = u'{pre}{0}'.format(r, pre={'b':'[', 'n':']'}.get(p, p))
+            elif arg.startswith('post'):
+                p = arg[4:]
+                r = u'{0}{post}'.format(r, post={'b':'[', 'n':']'}.get(p, p))
+            elif arg.startswith('col'):
+                r = getattr(g_term, arg[3:])(r)
+            elif arg.startswith(('l', 'r', 'c')):
+                r = u'{0:{dir}{num}}'.format(r, dir={'l':'<', 'r':'>', 'c':'^'}[arg[0]], num=int(arg[1:]))
+        return r
+
+    def __getattr__(self, name):
+        return self[name]
 
     def _init(self):
         self.id = str(self.id)
@@ -85,11 +110,10 @@ class Ticket(object):
         # self.milestone = str(self.milestone)
 
     def format(self, template=None):
-        term = blessings.Terminal()
         if template is None:
             template = Ticket._list_format
         # s == self, t == term
-        return template.format(s=self, t=term, hline=horline(), hhline=horline(u'='))
+        return template.format(s=self, t=g_term, hline=horline(), hhline=horline(u'='))
 
         
 def utctolocal(dt):
