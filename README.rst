@@ -8,6 +8,21 @@ git-ticket supports **github**, **bitbucket**, and **redmine**.
 
 This tool is currentry **under development** state and not tested enough.
 
+
+----------
+Screenshot
+----------
+
+list command:
+
+.. image:: https://raw.github.com/aflc/git-ticket/gh-pages/ex_list.png
+    :scale: 100%
+
+show command:
+
+.. image:: https://raw.github.com/aflc/git-ticket/gh-pages/ex_show.png
+    :scale: 100%
+
 ------------
 Installation
 ------------
