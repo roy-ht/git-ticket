@@ -89,9 +89,8 @@ def issue(number, params={}):
                         commentnum = j['comments'],
                         create = todatetime(j['created_at']),
                         update = todatetime(j['updated_at']),
-                        closed = todatetime(j['updated_at']),
-                        comments = comments)
-    return tic
+                        closed = todatetime(j['updated_at']))
+    return tic, comments
 
 
 def assignees(params={}):

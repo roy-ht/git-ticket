@@ -9,17 +9,20 @@ from gitticket import display
 
 def show(opts):
     cfg = config.parseconfig()
-    tic = cfg['service'].issue(opts['number'])
-    print display.ticketdetail(tic)
+    ticket, comments = cfg['service'].issue(opts['number'])
+    print ticket.format(cfg['format_show'] or ticket._show_format)
+    for comment in comments:
+        print comment.format(cfg['format_comment'])
 
 
 def list(opts):
     cfg = config.parseconfig()
-    r = cfg['service'].issues(opts)
-    if not r:
+    tickets = cfg['service'].issues(opts)
+    if not tickets:
         print u'No tickets.\n'
     else:
-        print display.ticketlist(r)
+        for tic in tickets:
+            print tic.format(cfg['format_list'])
 
 
 def add(opts):
