@@ -27,6 +27,8 @@ class Ticket(object):
         self._init()  # reformatting
 
     def __getitem__(self, name):
+        if not isinstance(name, basestring):
+            raise TypeError('Ticket indices must be str, not integers')
         if name.count('__') != 1:
             return getattr(self, name)
         l = name.split(u'__')

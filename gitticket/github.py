@@ -28,10 +28,12 @@ MILESTONE = os.path.join(MILESTONES, '{milestoneid}')
 
 DATEFMT = "%Y-%m-%dT%H:%M:%S%Z"
 
+
 def authorize(name, pswd):
     cfg = config.parseconfig()
     r = requests.post(AUTH, data=json.dumps({'scopes':['repo'], 'note':'git-ticket'}), auth=(name, pswd), verify=cfg['sslverify'])
     return r.json
+
 
 def issues(params={}):
     cfg = config.parseconfig()
@@ -43,10 +45,9 @@ def issues(params={}):
     r = _request('get', url, params=params).json
     if 'message' in r:
         raise ValueError('Invarid query: {0}'.format(r['message']))
-    tickets = []
-    for j in r:
-        tickets.append(_toticket(j))
+    tickets = [_toticket(x) for x in r]
     return tickets
+
     
 def issue(number, params={}):
     cfg = config.parseconfig()
@@ -62,8 +63,7 @@ def issue(number, params={}):
                                body = x['body'],
                                creator = nested_access(x, 'user.login'),
                                created = todatetime(x['created_at']),
-                               updated = todatetime(x['updated_at']),
-                               ) for x in cj]
+                               updated = todatetime(x['updated_at'])) for x in cj]
     tic = _toticket(j)
     return tic, comments
 

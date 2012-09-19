@@ -58,9 +58,7 @@ def issues(params={}):
     if params['sort'] == 'updated':
         params['sort'] = 'utc_last_updated'
     r = _request('get', url, params=params).json
-    tickets = []
-    for j in r['issues']:
-        tickets.append(_toticket(j))
+    tickets = [_toticket(x) for x in r['issues']]
     return tickets
 
 
@@ -70,14 +68,13 @@ def issue(number, params={}):
     cj = _request('get', ISSUE_COMMENTS.format(issueid=number, **cfg), {'limit':50}).json
     cj = [x for x in cj if x['content'] is not None]
     # commentは特殊。statusの変更がコメント化され、Web上では表示できるが、APIからは補足できない。
-    comments = [ticket.Comment({'id':x['comment_id'],
-                                'body':x['content'] or u'',
-                                'created_by':nested_access(x, 'author_info.username'),
-                                'create':todatetime(x['utc_created_on']),
-                                'update':todatetime(x['utc_updated_on']),
-                                }) for x in cj]
+    comments = [ticket.Comment(number = x['comment_id'],
+                               body = x['content'],
+                               creator = nested_access(x, 'author_info.username'),
+                               created = todatetime(x['utc_created_on']),
+                               updated = todatetime(x['utc_updated_on'])) for x in cj]
     tic = _toticket(j)
-    return tic
+    return tic, comments
 
 
 def _toticket(d):
@@ -85,14 +82,14 @@ def _toticket(d):
                          state = d['status'],
                          title = d['title'],
                          body = d['content'],
-                         labels = nested_access(j, 'metadata.kind'),
-                         priority = j['priority'],
-                         milestone = nested_access(j, 'metadata.milestone'),
-                         creator = nested_access(j, 'reported_by.username'),
-                         assignee = nested_access(j, 'responsible.username'),
-                         comments = j['comment_count'],
-                         created = todatetime(j['utc_created_on']),
-                         updated = todatetime(j['utc_last_updated']))
+                         labels = nested_access(d, 'metadata.kind'),
+                         priority = d['priority'],
+                         milestone = nested_access(d, 'metadata.milestone'),
+                         creator = nested_access(d, 'reported_by.username'),
+                         assignee = nested_access(d, 'responsible.username'),
+                         comments = d['comment_count'],
+                         created = todatetime(d['utc_created_on']),
+                         updated = todatetime(d['utc_last_updated']))
 
 
 def add(params={}):

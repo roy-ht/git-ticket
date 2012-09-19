@@ -37,21 +37,19 @@ def issues(params={}):
     if params['sort'] == 'updated':
         params['sort'] = 'updated_on:desc'
     r = _request('get', ISSUES.format(**cfg), params=params).json
-    tickets = []
-    for j in r['issues']:
-        tickets.append(_toticket(j))
+    tickets = [_toticket(x) for x in r['issues']]
     return tickets
     
 def issue(number, params={}):
     cfg = config.parseconfig()
     params['include'] = u','.join(('journals', 'children', 'changesets'))
     j = _request('get', ISSUE.format(issueid=number, **cfg), params=params).json['issue']
-    comments = [ticket.Comment(_parse_journal(x)) for x in reversed(j['journals'])]
+    comments = [ticket.Comment(**_parse_journal(x)) for x in reversed(j['journals'])]
     tic = _toticket(j)
     # additional attributes
     tic.priority_id = nested_access(j, 'priority.id')
 
-    return tic
+    return tic, comments
 
 def _toticket(d):
     return ticket.Ticket(number = d['id'],
@@ -187,9 +185,9 @@ def _issuedata_from_template(s):
 
 def _parse_journal(j):
     r = {}
-    r['id'] = j['id']
-    r['created_by'] = nested_access(j, 'user.name')
-    r['create'] = todatetime(j['created_on'])
+    r['number'] = j['id']
+    r['creator'] = nested_access(j, 'user.name')
+    r['created'] = todatetime(j['created_on'])
     r['body'] = u''
     # make body
     if 'notes' in j:
