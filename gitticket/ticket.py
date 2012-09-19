@@ -46,10 +46,10 @@ class Comment(object):
         
 
 class Ticket(object):
-    _list_format = u'{s[state___colcyan_preb_postn_l23]} {s[id__pre#_colred]} ({s[update__colyellow]}) {s.title} - {s[assign__colmagenta]}'
+    _list_format = u"{s[state___bcyan_^b_$e_l23]} {s[id__^#_bred]} ({s[update__byellow]}) {s.title} - {s[assign__bmagenta]}"
     _show_format = u'''
-    [{t.cyan}{s.state}{t.normal}][{t.green}{s.labels}{t.normal}] {s.title}
-    created by {t.magenta}{s.assign}{t.normal} at {t.yellow}{s.create}{t.normal}, updated at {t.yellow}{s.update}{t.normal}
+    [{s[state__bcyan]}]{s[labels__bgreen_^b_$e]} {s.title}
+    created by {s[assign__bmagenta]} at {s[create__byellow]}, updated at {s[update__yellow]}
 
 {s.body}
 '''
@@ -80,20 +80,18 @@ class Ticket(object):
         r = self[key]
         for arg in args:
                 ## r1, l5, c24 等でアライメント
-            if arg.startswith('pre'):
-                p = arg[3:]
-                r = u'{pre}{0}'.format(r, pre={'b':'[', 'n':']'}.get(p, p))
-            elif arg.startswith('post'):
-                p = arg[4:]
-                r = u'{0}{post}'.format(r, post={'b':'[', 'n':']'}.get(p, p))
-            elif arg.startswith('col'):
-                r = getattr(g_term, arg[3:])(r)
+            if arg.startswith('^'):
+                p = arg[1:]
+                r = u'{pre}{0}'.format(r, pre={'b':'[', 'e':']'}.get(p, p))
+            elif arg.startswith('$'):
+                p = arg[1:]
+                r = u'{0}{post}'.format(r, post={'b':'[', 'e':']'}.get(p, p))
+            elif arg.startswith('b'):
+                r = getattr(g_term, arg[1:])(r)
             elif arg.startswith(('l', 'r', 'c')):
                 r = u'{0:{dir}{num}}'.format(r, dir={'l':'<', 'r':'>', 'c':'^'}[arg[0]], num=int(arg[1:]))
         return r
 
-    def __getattr__(self, name):
-        return self[name]
 
     def _init(self):
         self.id = str(self.id)
