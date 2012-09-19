@@ -45,20 +45,7 @@ def issues(params={}):
         raise ValueError('Invarid query: {0}'.format(r['message']))
     tickets = []
     for j in r:
-        create = todatetime(j['created_at'])
-        update = todatetime(j['updated_at'])
-        closed = todatetime(j['closed_at'])
-        t = ticket.Ticket(id = j['number'],
-                          state = j['state'],
-                          title = j['title'],
-                          body = j['body'],
-                          created_by = nested_access(j, 'user.login'),
-                          assign = nested_access(j, 'assignee.login'),
-                          commentnum = j['comments'],
-                          create = create,
-                          update = update,
-                          closed = closed)
-        tickets.append(t)
+        tickets.append(_toticket(j))
     return tickets
     
 def issue(number, params={}):
@@ -77,20 +64,22 @@ def issue(number, params={}):
                                 'create':todatetime(x['created_at']),
                                 'update':todatetime(x['updated_at']),
                                 }) for x in cj]
-    tic = ticket.Ticket(id = j['number'],
-                        state = j['state'],
-                        title = j['title'],
-                        body = j['body'],
-                        closed_by = j['closed_by'],
-                        labels = labels,
-                        milestone = j['milestone'],
-                        created_by = nested_access(j, 'user.login'),
-                        assign = nested_access(j, 'assignee.login'),
-                        commentnum = j['comments'],
-                        create = todatetime(j['created_at']),
-                        update = todatetime(j['updated_at']),
-                        closed = todatetime(j['updated_at']))
+    tic = _toticket(j)
     return tic, comments
+
+
+def _toticket(d):
+    return ticket.Ticket(number = d['number'],
+                         state = d['state'],
+                         title = d['title'],
+                         body = d['body'],
+                         creator = nested_access(d, 'user.login'),
+                         assignee = nested_access(d, 'assignee.login'),
+                         comments = d['comments'],
+                         created = todatetime(d['created_at']),
+                         updated = todatetime(d['updated_at']),
+                         closed = todatetime(d['closed_at']))
+    
 
 
 def assignees(params={}):

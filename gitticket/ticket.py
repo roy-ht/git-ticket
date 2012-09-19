@@ -11,18 +11,18 @@ g_term = blessings.Terminal()
 
 
 class Ticket(object):
-    _list_format = u"{s[state___bcyan_^b_$e_l23]} {s[id__^#_bred]} ({s[update__byellow]}) {s.title} - {s[assign__bmagenta]}"
+    _list_format = u"{s[state___bcyan_^b_$e_l23]} {s[number__^#_bred]} ({s[updated__byellow]}) {s.title} - {s[assignee__bmagenta]}"
     _show_format = u'''
     [{s[state__bcyan]}]{s[labels__bgreen_^b_$e]} {s.title}
-    created by {s[assign__bmagenta]} at {s[create__byellow]}, updated at {s[update__yellow]}
+    created by {s[assignee__bmagenta]} at {s[created__byellow]}, updated at {s[updated__yellow]}
 
 {s.body}
 '''
     def __init__(self, **dct):
-        attributes = ['html_url', 'number', 'state', 'title', 'body', 'username', 'userfullname', 'labels', 'assignee',
+        attributes = ['html_url', 'number', 'state', 'title', 'body', 'creator', 'creator_fullname', 'labels', 'assignee', 'assignee_fullname'
                       'milestone', 'comments', 'pull_request', 'closed', 'created', 'updated', 'priority']
         for attr in attributes:
-            if attr in dct:
+            if attr in dct and dct[attr] is not None:
                 setattr(self, attr, dct[attr])
         self._init()  # reformatting
 
@@ -32,7 +32,10 @@ class Ticket(object):
         l = name.split(u'__')
         key, args = l
         args = args.split(u'_')
-        r = self[key]
+        try:
+            r = getattr(self, key)
+        except AttributeError:
+            return u''
         for arg in args:
                 ## r1, l5, c24 等でアライメント
             if arg.startswith('^'):
@@ -42,25 +45,21 @@ class Ticket(object):
                 p = arg[1:]
                 r = u'{0}{post}'.format(r, post={'b':'[', 'e':']'}.get(p, p))
             elif arg.startswith('b'):
-                r = getattr(g_term, arg[1:])(r)
+                r = getattr(g_term, arg[1:])('{0}'.format(r))
             elif arg.startswith(('l', 'r', 'c')):
                 r = u'{0:{dir}{num}}'.format(r, dir={'l':'<', 'r':'>', 'c':'^'}[arg[0]], num=int(arg[1:]))
         return r
 
 
     def _init(self):
-        self.id = str(self.id)
-        if not self.assign:
-            self.assign = 'None'
-        if self.commentnum is not None:
-            self.commentnum = str(self.commentnum)
-        self.create = humandate(self.create)
-        self.update = humandate(self.update)
-        self.closed = humandate(self.closed)
-        if not self.closed_by:
-            self.closed_by = 'None'
-        self.labels = u', '.join(self._rawlabels)
-        # self.milestone = str(self.milestone)
+        if not hasattr(self, 'assignee'):
+            self.assignee = u'Not yet'
+        for attr in ('created', 'updated', 'closed'):
+            if hasattr(self, attr):
+                setattr(self, attr, humandate(getattr(self, attr)))
+        if hasattr(self, 'labels'):
+            self._rawlabels = self.labels
+            self.labels = u', '.join(self.labels) if isinstance(self.labels, (list, tuple)) else self._rawlabels
 
     def format(self, template=None):
         if template is None:
