@@ -58,12 +58,12 @@ def issue(number, params={}):
     cj = requests.get(ISSUE_COMMENTS.format(issueid=number, **cfg), params=params, verify=cfg['sslverify']).json
     if 'message' in cj:
         raise ValueError('Invarid query: {0}'.format(cj['message']))
-    comments = [ticket.Comment({'id':x['id'],
-                                'body':x['body'],
-                                'created_by':nested_access(x, 'user.login'),
-                                'create':todatetime(x['created_at']),
-                                'update':todatetime(x['updated_at']),
-                                }) for x in cj]
+    comments = [ticket.Comment(number = x['id'],
+                               body = x['body'],
+                               creator = nested_access(x, 'user.login'),
+                               created = todatetime(x['created_at']),
+                               updated = todatetime(x['updated_at']),
+                               ) for x in cj]
     tic = _toticket(j)
     return tic, comments
 
@@ -80,7 +80,6 @@ def _toticket(d):
                          updated = todatetime(d['updated_at']),
                          closed = todatetime(d['closed_at']))
     
-
 
 def assignees(params={}):
     cfg = config.parseconfig()

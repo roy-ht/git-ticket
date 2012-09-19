@@ -60,18 +60,7 @@ def issues(params={}):
     r = _request('get', url, params=params).json
     tickets = []
     for j in r['issues']:
-        create = todatetime(j['utc_created_on'])
-        update = todatetime(j['utc_last_updated'])
-        t = ticket.Ticket(id = j['local_id'],
-                          state = j['status'],
-                          title = j['title'],
-                          body = j['content'],
-                          created_by = nested_access(j, 'reported_by.username'),
-                          assign = nested_access(j, 'responsible.username'),
-                          commentnum = j['comment_count'],
-                          create = create,
-                          update = update)
-        tickets.append(t)
+        tickets.append(_toticket(j))
     return tickets
 
 
@@ -87,20 +76,23 @@ def issue(number, params={}):
                                 'create':todatetime(x['utc_created_on']),
                                 'update':todatetime(x['utc_updated_on']),
                                 }) for x in cj]
-    tic = ticket.Ticket(id = j['local_id'],
-                        state = j['status'],
-                        title = j['title'],
-                        body = j['content'],
-                        labels = [nested_access(j, 'metadata.kind')],
-                        priority = j['priority'],
-                        milestone = nested_access(j, 'metadata.milestone'),
-                        created_by = nested_access(j, 'reported_by.username'),
-                        assign = nested_access(j, 'responsible.username'),
-                        commentnum = j['comment_count'],
-                        create = todatetime(j['utc_created_on']),
-                        update = todatetime(j['utc_last_updated']),
-                        comments = comments)
+    tic = _toticket(j)
     return tic
+
+
+def _toticket(d):
+    return ticket.Ticket(number = d['local_id'],
+                         state = d['status'],
+                         title = d['title'],
+                         body = d['content'],
+                         labels = nested_access(j, 'metadata.kind'),
+                         priority = j['priority'],
+                         milestone = nested_access(j, 'metadata.milestone'),
+                         creator = nested_access(j, 'reported_by.username'),
+                         assignee = nested_access(j, 'responsible.username'),
+                         comments = j['comment_count'],
+                         created = todatetime(j['utc_created_on']),
+                         updated = todatetime(j['utc_last_updated']))
 
 
 def add(params={}):

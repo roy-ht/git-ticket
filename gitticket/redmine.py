@@ -39,17 +39,7 @@ def issues(params={}):
     r = _request('get', ISSUES.format(**cfg), params=params).json
     tickets = []
     for j in r['issues']:
-        create = todatetime(j['created_on'])
-        update = todatetime(j['updated_on'])
-        t = ticket.Ticket(id = j['id'],
-                          state = nested_access(j, 'status.name'),
-                          title = j['subject'],
-                          body = j.get('description', ''),
-                          created_by = nested_access(j, 'author.name'),
-                          assign = nested_access(j, 'assigned_to.name'),
-                          create = create,
-                          update = update)
-        tickets.append(t)
+        tickets.append(_toticket(j))
     return tickets
     
 def issue(number, params={}):
@@ -57,21 +47,23 @@ def issue(number, params={}):
     params['include'] = u','.join(('journals', 'children', 'changesets'))
     j = _request('get', ISSUE.format(issueid=number, **cfg), params=params).json['issue']
     comments = [ticket.Comment(_parse_journal(x)) for x in reversed(j['journals'])]
-    tic = ticket.Ticket(id = j['id'],
-                        state = nested_access(j, 'status.name'),
-                        priority = nested_access(j, 'priority.name'),
-                        title = j['subject'],
-                        labels = [nested_access(j, 'tracker.name')],
-                        body = j.get('description', u''),
-                        created_by = nested_access(j, 'author.name'),
-                        assign = nested_access(j, 'assigned_to.name'),
-                        comments = comments,
-                        create = todatetime(j['created_on']),
-                        update = todatetime(j['updated_on']))
+    tic = _toticket(j)
     # additional attributes
     tic.priority_id = nested_access(j, 'priority.id')
 
     return tic
+
+def _toticket(d):
+    return ticket.Ticket(number = d['id'],
+                         state = nested_access(j, 'status.name'),
+                         priority = nested_access(d, 'priority.name'),
+                         labels = [nested_access(j, 'tracker.name')],
+                         title = d['subject'],
+                         body = d['description'],
+                         creator = nested_access(d, 'author.name'),
+                         assignee = nested_access(d, 'assigned_to.name'),
+                         created = todatetime(d['created_on']),
+                         updated = todatetime(d['updated_on']))
 
 
 def add(params={}):

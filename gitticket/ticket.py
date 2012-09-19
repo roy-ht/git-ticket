@@ -69,37 +69,53 @@ class Ticket(object):
 
 
 class Comment(object):
-    _format = u'''Comment {t.green}#{s.id}{t.normal} {t.magenta}{s.created_by}{t.normal} at {t.yellow}{s.update}{t.normal}
+    _format = u'''Comment {s[number__^#_bgreen]} {s[created__bmagenta]} at {s[updated__byellow]}
 {hline}
 {s.body}
 '''
-    def __init__(self, dct):
-        self.id = dct['id']
-        self.body = dct['body']
-        self.created_by = dct['created_by']
-        self.create = dct['create'] # datetime
-        # option value
-        self.update = dct.get('update', None) # datetime
-
+    def __init__(self, **dct):
+        attributes = ['number', 'html_url', 'body', 'creator', 'creator_fullname', 'created', 'updated']
+        for attr in attributes:
+            if attr in dct and dct[attr] is not None:
+                setattr(self, attr, dct[attr])
         self._init()
 
     def __getitem__(self, name):
-        return getattr(self, name)
+        if name.count('__') != 1:
+            return getattr(self, name)
+        l = name.split(u'__')
+        key, args = l
+        args = args.split(u'_')
+        try:
+            r = getattr(self, key)
+        except AttributeError:
+            return u''
+        for arg in args:
+                ## r1, l5, c24 等でアライメント
+            if arg.startswith('^'):
+                p = arg[1:]
+                r = u'{pre}{0}'.format(r, pre={'b':'[', 'e':']'}.get(p, p))
+            elif arg.startswith('$'):
+                p = arg[1:]
+                r = u'{0}{post}'.format(r, post={'b':'[', 'e':']'}.get(p, p))
+            elif arg.startswith('b'):
+                r = getattr(g_term, arg[1:])('{0}'.format(r))
+            elif arg.startswith(('l', 'r', 'c')):
+                r = u'{0:{dir}{num}}'.format(r, dir={'l':'<', 'r':'>', 'c':'^'}[arg[0]], num=int(arg[1:]))
+        return r
 
     def _init(self):
-        self.id = str(self.id)
-        self.create = humandate(self.create)
-        if self.update:
-            self.update = humandate(self.update)
-        else:
-            self.update = self.create
+        for attr in ('created', 'updated'):
+            if hasattr(self, attr):
+                setattr(self, attr, humandate(getattr(self, attr)))
+        if not hasattr(self, 'updated'):
+            self.updated = self.created
         self.body = self.body.rstrip()
 
     def format(self, template=None):
         term = blessings.Terminal()
         if template is None:
             template = Comment._format
-            
         return template.format(s=self, t=term, hline=horline(), hhline=horline(u'='))
         
 
