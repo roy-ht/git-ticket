@@ -19,21 +19,11 @@ class Ticket(object):
 {s.body}
 '''
     def __init__(self, **dct):
-        self.id = dct['id']
-        self.state = dct['state']
-        self.title = dct['title']
-        self.created_by = dct['created_by']
-        self.assign = dct['assign']
-        self.create = dct['create'] # datetime
-        self.update = dct['update'] # datetime
-        self.body = dct['body'] or u''
-        # オプション
-        self.priority = dct.get('priority', None)
-        self.commentnum = dct.get('commentnum', None)
-        self.closed = dct.get('closed', None) # datetime
-        self._rawlabels = dct.get('labels', None) or []
-        self.milestone = dct.get('milestone', None) or {} # TODO: milestoneをもっと詳細化
-        self.closed_by = dct.get('closed_by', None)
+        attributes = ['html_url', 'number', 'state', 'title', 'body', 'username', 'userfullname', 'labels', 'assignee',
+                      'milestone', 'comments', 'pull_request', 'closed', 'created', 'updated', 'priority']
+        for attr in attributes:
+            if attr in dct:
+                setattr(self, attr, dct[attr])
         self._init()  # reformatting
 
     def __getitem__(self, name):
