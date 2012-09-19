@@ -10,41 +10,6 @@ import blessings
 g_term = blessings.Terminal()
 
 
-class Comment(object):
-    _format = u'''Comment {t.green}#{s.id}{t.normal} {t.magenta}{s.created_by}{t.normal} at {t.yellow}{s.update}{t.normal}
-{hline}
-{s.body}
-'''
-    def __init__(self, dct):
-        self.id = dct['id']
-        self.body = dct['body']
-        self.created_by = dct['created_by']
-        self.create = dct['create'] # datetime
-        # option value
-        self.update = dct.get('update', None) # datetime
-
-        self._init()
-
-    def __getitem__(self, name):
-        return getattr(self, name)
-
-    def _init(self):
-        self.id = str(self.id)
-        self.create = humandate(self.create)
-        if self.update:
-            self.update = humandate(self.update)
-        else:
-            self.update = self.create
-        self.body = self.body.rstrip()
-
-    def format(self, template=None):
-        term = blessings.Terminal()
-        if template is None:
-            template = Comment._format
-            
-        return template.format(s=self, t=term, hline=horline(), hhline=horline(u'='))
-        
-
 class Ticket(object):
     _list_format = u"{s[state___bcyan_^b_$e_l23]} {s[id__^#_bred]} ({s[update__byellow]}) {s.title} - {s[assign__bmagenta]}"
     _show_format = u'''
@@ -113,12 +78,48 @@ class Ticket(object):
         # s == self, t == term
         return template.format(s=self, t=g_term, hline=horline(), hhline=horline(u'='))
 
+
+class Comment(object):
+    _format = u'''Comment {t.green}#{s.id}{t.normal} {t.magenta}{s.created_by}{t.normal} at {t.yellow}{s.update}{t.normal}
+{hline}
+{s.body}
+'''
+    def __init__(self, dct):
+        self.id = dct['id']
+        self.body = dct['body']
+        self.created_by = dct['created_by']
+        self.create = dct['create'] # datetime
+        # option value
+        self.update = dct.get('update', None) # datetime
+
+        self._init()
+
+    def __getitem__(self, name):
+        return getattr(self, name)
+
+    def _init(self):
+        self.id = str(self.id)
+        self.create = humandate(self.create)
+        if self.update:
+            self.update = humandate(self.update)
+        else:
+            self.update = self.create
+        self.body = self.body.rstrip()
+
+    def format(self, template=None):
+        term = blessings.Terminal()
+        if template is None:
+            template = Comment._format
+            
+        return template.format(s=self, t=term, hline=horline(), hhline=horline(u'='))
         
+
 def utctolocal(dt):
     u"""convert UTC+0000 datetime.datetime to local datetime.datetime
     """
     secs = calendar.timegm(dt.timetuple())
     return datetime(*time.localtime(secs)[:6])
+
 
 def humandate(dt):
     if not dt:
@@ -169,6 +170,7 @@ def template(disps, **kwargs):
             t += u'\n'
         t += default + u'\n'
     return t
+
 
 def templatetodic(s, mapping={}):
     s = util.rmcomment(s)
