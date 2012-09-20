@@ -13,13 +13,16 @@ from gitticket import util
 CONSUMER_KEY = 'Bq7A3PXEdgGeWy94VA'
 CONSUMER_SECRET = 'jWvtdn3tR4Q9vGn3USbQJZZHAnd7neXM'
 
-OAUTH_REQUEST = 'https://bitbucket.org/api/1.0/oauth/request_token'
-OAUTH_AUTH = 'https://bitbucket.org/api/1.0/oauth/authenticate'
-OAUTH_ACCESS = 'https://bitbucket.org/api/1.0/oauth/access_token'
+APIBASE = 'https://api.bitbucket.org/1.0'
+SITEBASE = 'https://bitbucket.org'
 
-BASEURL = 'https://api.bitbucket.org/1.0'
-ISSUEURL = 'https://bitbucket.org/{name}/{repo}/issue/{issueid}'
-REPO = os.path.join(BASEURL, 'repositories/{name}/{repo}')
+ISSUEURL = os.path.join(SITEBASE, '{name}/{repo}/issues/{issueid}')
+
+OAUTH_REQUEST = os.path.join(APIBASE, 'oauth/request_token')
+OAUTH_AUTH = os.path.join(APIBASE, 'oauth/authenticate')
+OAUTH_ACCESS = os.path.join(APIBASE, 'oauth/access_token')
+
+REPO = os.path.join(APIBASE, 'repositories/{name}/{repo}')
 ISSUES = os.path.join(REPO, 'issues')
 ISSUE = os.path.join(ISSUES, '{issueid}')
 ISSUE_COMMENTS = os.path.join(ISSUE, 'comments')
@@ -78,18 +81,24 @@ def issue(number, params={}):
 
 
 def _toticket(d):
-    return ticket.Ticket(number = d['local_id'],
-                         state = d['status'],
-                         title = d['title'],
-                         body = d['content'],
-                         labels = nested_access(d, 'metadata.kind'),
-                         priority = d['priority'],
-                         milestone = nested_access(d, 'metadata.milestone'),
-                         creator = nested_access(d, 'reported_by.username'),
-                         assignee = nested_access(d, 'responsible.username'),
-                         comments = d['comment_count'],
-                         created = todatetime(d['utc_created_on']),
-                         updated = todatetime(d['utc_last_updated']))
+    cfg = config.parseconfig()
+    j = dict(number = d['local_id'],
+             state = d['status'],
+             title = d['title'],
+             body = d['content'],
+             labels = nested_access(d, 'metadata.kind'),
+             priority = d['priority'],
+             milestone = nested_access(d, 'metadata.milestone'),
+             creator = nested_access(d, 'reported_by.username'),
+             creator_fullname = u' '.join((nested_access(d, 'reported_by.first_name'), nested_access(d, 'reported_by.last_name'))),
+             html_url = ISSUEURL.format(issueid=d['local_id'], **cfg),
+             assignee = nested_access(d, 'responsible.username'),
+             comments = d['comment_count'],
+             created = todatetime(d['utc_created_on']),
+             updated = todatetime(d['utc_last_updated']))
+    if 'responsible' in d:
+        j['assignee_fullname'] = u' '.join((nested_access(d, 'responsible.first_name'), nested_access(d, 'responsible.last_name')))
+    return ticket.Ticket(**j)
 
 
 def add(params={}):
@@ -100,7 +109,7 @@ def add(params={}):
     data = _issuedata_from_template(val)
     cfg = config.parseconfig()
     r = _request('post', ISSUES.format(**cfg), data=data, params=params).json
-    return {'number':r['local_id'], 'html_url':ISSUEURL.format(issueid=r['local_id'], **cfg)}
+    return {'number': r['local_id'], 'html_url': ISSUEURL.format(issueid=d['local_id'], **cfg)}
 
 
 def update(number, params={}):
@@ -121,7 +130,7 @@ def update(number, params={}):
     data = _issuedata_from_template(val)
     cfg = config.parseconfig()
     r = _request('put', ISSUE.format(issueid=number, **cfg), data=data, params=params).json
-    return {'number':r['local_id'], 'html_url':ISSUEURL.format(issueid=r['local_id'], **cfg)}
+    return {'number': r['local_id'], 'html_url': ISSUEURL.format(issueid=d['local_id'], **cfg)}
 
 
 def changestate(number, state):

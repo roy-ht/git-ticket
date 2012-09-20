@@ -69,16 +69,22 @@ def issue(number, params={}):
 
 
 def _toticket(d):
-    return ticket.Ticket(number = d['number'],
-                         state = d['state'],
-                         title = d['title'],
-                         body = d['body'],
-                         creator = nested_access(d, 'user.login'),
-                         assignee = nested_access(d, 'assignee.login'),
-                         comments = d['comments'],
-                         created = todatetime(d['created_at']),
-                         updated = todatetime(d['updated_at']),
-                         closed = todatetime(d['closed_at']))
+    j = dict(number = d['number'],
+             state = d['state'],
+             title = d['title'],
+             body = d['body'],
+             creator = nested_access(d, 'user.login'),
+             assignee = nested_access(d, 'assignee.login'),
+             comments = d['comments'],
+             milestone = nested_access(d, 'milestone.title'),
+             created = todatetime(d['created_at']),
+             updated = todatetime(d['updated_at']),
+             closed = todatetime(d['closed_at']),
+             html_url = d['html_url']
+             )
+    if nested_access(d, 'pull_request.html_url'):
+        j['pull_request'] = 'Pull Request'
+    return ticket.Ticket(**j)
     
 
 def assignees(params={}):
