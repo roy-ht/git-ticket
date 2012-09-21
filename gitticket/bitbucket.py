@@ -74,31 +74,10 @@ def issue(number, params={}):
     comments = [ticket.Comment(number = x['comment_id'],
                                body = x['content'],
                                creator = nested_access(x, 'author_info.username'),
-                               created = todatetime(x['utc_created_on']),
-                               updated = todatetime(x['utc_updated_on'])) for x in cj]
+                               created = _todatetime(x['utc_created_on']),
+                               updated = _todatetime(x['utc_updated_on'])) for x in cj]
     tic = _toticket(j)
     return tic, comments
-
-
-def _toticket(d):
-    cfg = config.parseconfig()
-    j = dict(number = d['local_id'],
-             state = d['status'],
-             title = d['title'],
-             body = d['content'],
-             labels = nested_access(d, 'metadata.kind'),
-             priority = d['priority'],
-             milestone = nested_access(d, 'metadata.milestone'),
-             creator = nested_access(d, 'reported_by.username'),
-             creator_fullname = u' '.join((nested_access(d, 'reported_by.first_name'), nested_access(d, 'reported_by.last_name'))),
-             html_url = ISSUEURL.format(issueid=d['local_id'], **cfg),
-             assignee = nested_access(d, 'responsible.username'),
-             comments = d['comment_count'],
-             created = todatetime(d['utc_created_on']),
-             updated = todatetime(d['utc_last_updated']))
-    if 'responsible' in d:
-        j['assignee_fullname'] = u' '.join((nested_access(d, 'responsible.first_name'), nested_access(d, 'responsible.last_name')))
-    return ticket.Ticket(**j)
 
 
 def add(params={}):
@@ -154,6 +133,27 @@ def comment(number, params={}):
     return r
 
 
+def _toticket(d):
+    cfg = config.parseconfig()
+    j = dict(number = d['local_id'],
+             state = d['status'],
+             title = d['title'],
+             body = d['content'],
+             labels = nested_access(d, 'metadata.kind'),
+             priority = d['priority'],
+             milestone = nested_access(d, 'metadata.milestone'),
+             creator = nested_access(d, 'reported_by.username'),
+             creator_fullname = u' '.join((nested_access(d, 'reported_by.first_name'), nested_access(d, 'reported_by.last_name'))),
+             html_url = ISSUEURL.format(issueid=d['local_id'], **cfg),
+             assignee = nested_access(d, 'responsible.username'),
+             comments = d['comment_count'],
+             created = _todatetime(d['utc_created_on']),
+             updated = _todatetime(d['utc_last_updated']))
+    if 'responsible' in d:
+        j['assignee_fullname'] = u' '.join((nested_access(d, 'responsible.first_name'), nested_access(d, 'responsible.last_name')))
+    return ticket.Ticket(**j)
+
+
 def _issuedata_from_template(s):
     data = ticket.templatetodic(s, {'assign':'responsible', 'type':'kind', 'description':'content'})
     if 'title' not in data:
@@ -178,6 +178,6 @@ def _request(rtype, url, params={}, data=None):
     return r
 
     
-def todatetime(dstr):
+def _todatetime(dstr):
     if isinstance(dstr, basestring):
         return datetime.datetime.strptime(dstr.replace('+00:00', 'UTC'), DATEFMT)
