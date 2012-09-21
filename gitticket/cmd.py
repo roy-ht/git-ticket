@@ -9,10 +9,12 @@ from gitticket import display
 
 def show(opts):
     cfg = config.parseconfig()
-    ticket, comments = cfg['service'].issue(opts['number'])
+    ticket = cfg['service'].issue(opts['number'])
     print ticket.format(cfg['format_show'] or ticket._show_format)
-    for comment in comments:
-        print comment.format(cfg['format_comment'])
+    if not opts.get('nocomment', False):
+        comments = cfg['service'].comments(opts['number'])
+        for comment in comments:
+            print comment.format(cfg['format_comment'])
 
 
 def list(opts):

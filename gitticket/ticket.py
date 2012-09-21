@@ -78,7 +78,9 @@ class Ticket(object):
                 setattr(self, attr, humandate(getattr(self, attr)))
         if hasattr(self, 'labels'):
             self._rawlabels = self.labels
-            self.labels = u', '.join(self.labels) if isinstance(self.labels, (list, tuple)) else self._rawlabels
+            delattr(self, 'labels')
+            if self._rawlabels:
+                self.labels = u', '.join(self._rawlabels) if isinstance(self._rawlabels, (list, tuple)) else self._rawlabels
 
     def format(self, template=None):
         if template is None:
@@ -161,28 +163,32 @@ def humandate(dt):
         return 'just now'
 
 
-def template(disps, **kwargs):
-    u"""dispsに作る項目名、kwargs[name]['default']にデフォルトで表示する項目、kwargs[name]['comment']にコメント表示する文字列、
-    kwargs[name]['disp']に置き換える項目名を入れる
-    <name> title, assign, labels, milestone
+def template(disps, tic=None, comment=None):
+    u"""dispsに作る項目名、ticは既存のチケット、commentは付加コメント。
+    ticを与えると、入力フォームにticの内容を予め入力する。
     """
-    names = ('title', 'assign', 'labels', 'milestone', 'tracker', 'priority', 'status', 'description', 'notes')
+    names = ('number', 'state', 'title', 'creator', 'creator_fullname', 'labels', 'assignee', 'assignee_fullname',
+             'milestone', 'milestone_id', 'priority', 'version', 'component', 'body', 'notes')
     t = u''
-    for name in names:
-        if name in kwargs and 'comment' in kwargs[name]:
-            t += u'## {0}\n'.format(kwargs[name]['comment'])
+    # preset header
+    if tic is not None:
+        fstr = u'## ticket #{t.number} created by {t.creator}'
+        if hasattr(tic, 'creator_fullname'):
+            fstr += u' ({t.creator_fullname})'
+        t += fstr.format(t=tic) + u'\n'
+    # comments
+    t += u'\n'.join(u'## {0}'.format(x) for x in comment.split('\n')) + u'\n'
+    t += u'\n'
     for name in names:
         if name not in disps:
             continue
-        disp = name
-        default = u''
-        if name in kwargs:
-            disp = kwargs[name].get('disp', disp)
-            default = kwargs[name].get('default', default)
-        t += u':{0}: '.format(disp)
-        if name in ('description', 'notes'):
+        t += u':{0}: '.format(name)
+        if name in ('body', 'notes'):
             t += u'\n'
-        t += default + u'\n'
+        if tic is not None and hasattr(tic, name):
+            t += u'{0}'.format(getattr(tic, name))
+        t += u'\n'
+            
     return t
 
 
@@ -197,7 +203,7 @@ def templatetodic(s, mapping={}):
             name = content[0].replace(u' ', u'_').lower()
             name = mapping.get(name, name)
             d[name] = content[1].strip(u' ')
-        else: # 継続行とみなす
+        elif name is not None: # 継続行とみなす
             d[name] += u'\n' + line.rstrip(u' ')
     for k, v in d.items():
         d[k] = v.strip('\n')
