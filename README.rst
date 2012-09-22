@@ -42,7 +42,7 @@ Usage
 configuration
 =============
 
-For github, ::
+For github::
 
     git config ticket.github.token <your_access_token>
 
@@ -50,7 +50,7 @@ To get your access token, try this::
 
     git ticket github-authorize
 
-For bitbucket, ::
+For bitbucket::
 
     git config ticket.bitbucket.token <your_access_token>
     git config ticket.bitbucket.token-secret <your_access_token_secret>
@@ -59,7 +59,7 @@ To get your access token and access token secret, try this::
 
     git ticket bitbucket-authorize
 
-For redmine, ::
+For redmine::
 
     git config ticket.redmine.token <your_apikey>
     git config ticket.redmine.url <your_redmine_root>
@@ -118,6 +118,10 @@ close a ticket
 ReleaseNote
 -----------
 
+v0.4
+    * New: display format of list, show, add, update command.
+    * Fixed: #15 Automatic guessing of a ticket service was not functioned.
+
 v0.3.1
     * Fixed: crash if comment number is 0.
     * Fixed: fixed #13
@@ -136,6 +140,9 @@ v0.3
 What's Next?
 ------------
 
+* Add tests
+* Error messages
+* Documentation
 * git-flow integration
 
 -------
