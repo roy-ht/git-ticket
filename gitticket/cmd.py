@@ -4,7 +4,6 @@
 import sys
 import blessings
 from gitticket import config
-from gitticket import display
 
 
 def show(opts):
