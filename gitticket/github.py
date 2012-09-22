@@ -28,10 +28,12 @@ MILESTONE = os.path.join(MILESTONES, '{milestoneid}')
 
 DATEFMT = "%Y-%m-%dT%H:%M:%S%Z"
 
+
 def authorize(name, pswd):
     cfg = config.parseconfig()
     r = requests.post(AUTH, data=json.dumps({'scopes':['repo'], 'note':'git-ticket'}), auth=(name, pswd), verify=cfg['sslverify'])
     return r.json
+
 
 def issues(params={}):
     cfg = config.parseconfig()
@@ -43,56 +45,109 @@ def issues(params={}):
     r = _request('get', url, params=params).json
     if 'message' in r:
         raise ValueError('Invarid query: {0}'.format(r['message']))
-    tickets = []
-    for j in r:
-        create = todatetime(j['created_at'])
-        update = todatetime(j['updated_at'])
-        closed = todatetime(j['closed_at'])
-        t = ticket.Ticket(id = j['number'],
-                          state = j['state'],
-                          title = j['title'],
-                          body = j['body'],
-                          created_by = nested_access(j, 'user.login'),
-                          assign = nested_access(j, 'assignee.login'),
-                          commentnum = j['comments'],
-                          create = create,
-                          update = update,
-                          closed = closed)
-        tickets.append(t)
+    tickets = [_toticket(x) for x in r]
     return tickets
+
     
 def issue(number, params={}):
     cfg = config.parseconfig()
     url = ISSUE.format(issueid=number, **cfg)
-    j = _request('get', url, params=params).json
-    if 'message' in j:
-        raise ValueError('Invarid query: {0}'.format(j['message']))
-    labels = [x['name'] for x in j['labels']]
-    cj = requests.get(ISSUE_COMMENTS.format(issueid=number, **cfg), params=params, verify=cfg['sslverify']).json
-    if 'message' in cj:
-        raise ValueError('Invarid query: {0}'.format(cj['message']))
-    comments = [ticket.Comment({'id':x['id'],
-                                'body':x['body'],
-                                'created_by':nested_access(x, 'user.login'),
-                                'create':todatetime(x['created_at']),
-                                'update':todatetime(x['updated_at']),
-                                }) for x in cj]
-    tic = ticket.Ticket(id = j['number'],
-                        state = j['state'],
-                        title = j['title'],
-                        body = j['body'],
-                        closed_by = j['closed_by'],
-                        labels = labels,
-                        milestone = j['milestone'],
-                        created_by = nested_access(j, 'user.login'),
-                        assign = nested_access(j, 'assignee.login'),
-                        commentnum = j['comments'],
-                        create = todatetime(j['created_at']),
-                        update = todatetime(j['updated_at']),
-                        closed = todatetime(j['updated_at']),
-                        comments = comments)
-    return tic
+    r = _request('get', url, params=params).json
+    if 'message' in r:
+        raise ValueError('Invarid query: {0}'.format(r['message']))
+    return _toticket(r)
 
+
+def comments(number, params={}):
+    cfg = config.parseconfig()
+    r = requests.get(ISSUE_COMMENTS.format(issueid=number, **cfg), params=params, verify=cfg['sslverify']).json
+    if 'message' in r:
+        raise ValueError('Invarid query: {0}'.format(r['message']))
+    comments = [ticket.Comment(number = x['id'],
+                               body = x['body'],
+                               html_url = x['html_url'],
+                               creator = nested_access(x, 'user.login'),
+                               created = todatetime(x['created_at']),
+                               updated = todatetime(x['updated_at'])) for x in r]
+    return comments
+
+
+def _toticket(d):
+    j = dict(number = d['number'],
+             state = d['state'],
+             title = d['title'],
+             body = d['body'],
+             creator = nested_access(d, 'user.login'),
+             assignee = nested_access(d, 'assignee.login'),
+             labels = [x['name'] for x in d['labels']],
+             comments = d['comments'],
+             milestone = nested_access(d, 'milestone.title'),
+             created = todatetime(d['created_at']),
+             updated = todatetime(d['updated_at']),
+             closed = todatetime(d['closed_at']),
+             html_url = d['html_url']
+             )
+    if nested_access(d, 'pull_request.html_url'):
+        j['pull_request'] = 'Pull Request'
+    t = ticket.Ticket(**j)
+    if nested_access(d, 'milestone.id'):
+        t.milestone_id = nested_access(d, 'milestone.id')
+    return t
+    
+
+def add(params={}):
+    comment = 'Available assignees: {0}\nAvailable labels: {1}'.format(u', '.join(labels()), u', '.join(assignees()))
+    template = ticket.template(('title', 'assignee', 'labels', 'milestone_id', 'body'), comment=comment)
+    val = util.inputwitheditor(template)
+    if val == template:
+        return
+    data = _issuedata_from_template(val)
+    cfg = config.parseconfig()
+    r = _request('post', ISSUES.format(**cfg), data=json.dumps(data), params=params).json
+    if 'message' in r:
+        raise ValueError('Request Error: {0}'.format(r['message']))
+    else:
+        return r
+
+
+def update(number, params={}):
+    tic = issue(number, params)
+    comment = 'Available assignees: {0}\nAvailable labels: {1}'.format(u', '.join(labels()), u', '.join(assignees()))
+    template = ticket.template(('title', 'state', 'assignee', 'labels', 'milestone_id', 'body'), tic, comment=comment)
+    val = util.inputwitheditor(template)
+    if val == template:
+        return
+    data = _issuedata_from_template(val)
+    cfg = config.parseconfig()
+    r = _request('patch', ISSUE.format(issueid=number, **cfg), data=json.dumps(data), params=params).json
+    if 'message' in r:
+        raise ValueError('Request Error: {0}'.format(r['message']))
+    else:
+        return r
+
+    
+def changestate(number, state):
+    if state not in ('open', 'closed'):
+        raise ValueError('Unknown state: {0}'.format(state))
+    data = {'state': state}
+    cfg = config.parseconfig()
+    r = _request('patch', ISSUE.format(issueid=number, **cfg), data=json.dumps(data)).json
+    if 'message' in r:
+        raise ValueError('Request Error: {0}'.format(r['message']))
+    else:
+        return r
+    
+
+def commentto(number, params={}):
+    template = """# comment below here\n"""
+    val = util.inputwitheditor(template)
+    data = {'body': util.rmcomment(val)}
+    cfg = config.parseconfig()
+    r = _request('post', ISSUE_COMMENTS.format(issueid=number, **cfg), data=json.dumps(data), params=params).json
+    if 'message' in r:
+        raise ValueError('Request Error: {0}'.format(r['message']))
+    else:
+        return r
 
 def assignees(params={}):
     cfg = config.parseconfig()
@@ -106,74 +161,14 @@ def labels(params={}):
     return [x['name'] for x in r]
 
 
-def add(params={}):
-    template = ticket.template(('title', 'assign', 'labels', 'milestone', 'description'),
-                               assign={'comment':'Available assignee: {0}'.format(u', '.join(assignees()))},
-                               labels={'comment':'Available labels: {0}'.format(u', '.join(labels()))},
-                               milestone={'disp':'Milestone Id'})
-    val = util.inputwitheditor(template)
-    data = _issuedata_from_template(val)
-    cfg = config.parseconfig()
-    r = _request('post', ISSUES.format(**cfg), data=json.dumps(data), params=params).json
-    if 'message' in r:
-        raise ValueError('Request Error: {0}'.format(r['message']))
-    else:
-        return r
-
-def update(number, params={}):
-    tic = issue(number, params)
-    template = ticket.template(('title', 'assign', 'labels', 'milestone', 'description'),
-                               title={'default':tic.title},
-                               assign={'comment':'Available assignee: {0}'.format(u', '.join(assignees())),
-                                       'default':tic.assign if tic.assign != 'None' else u''},
-                               labels={'comment':'Available labels: {0}'.format(u', '.join(labels())),
-                                       'default':u', '.join(tic.labels)},
-                               milestone={'disp':'Milestone Id', 'default':tic.milestone.get('number', u'')},
-                               description={'default':tic.body})
-    val = util.inputwitheditor(template)
-    if val == template:
-        return
-    data = _issuedata_from_template(val)
-    cfg = config.parseconfig()
-    r = _request('patch', ISSUE.format(issueid=number, **cfg), data=json.dumps(data), params=params).json
-    if 'message' in r:
-        raise ValueError('Request Error: {0}'.format(r['message']))
-    else:
-        return r
-
-
-def changestate(number, state):
-    if state not in ('open', 'closed'):
-        raise ValueError('Unknown state: {0}'.format(state))
-    data = {'state': state}
-    cfg = config.parseconfig()
-    r = _request('patch', ISSUE.format(issueid=number, **cfg), data=json.dumps(data)).json
-    if 'message' in r:
-        raise ValueError('Request Error: {0}'.format(r['message']))
-    else:
-        return r
-    
-
-def comment(number, params={}):
-    template = """# comment below here\n"""
-    val = util.inputwitheditor(template)
-    data = {'body': util.rmcomment(val)}
-    cfg = config.parseconfig()
-    r = _request('post', ISSUE_COMMENTS.format(issueid=number, **cfg), data=json.dumps(data), params=params).json
-    if 'message' in r:
-        raise ValueError('Request Error: {0}'.format(r['message']))
-    else:
-        return r
-    
-
 def _issuedata_from_template(s):
-    data = ticket.templatetodic(s, {'assign':'assignee', 'milestone_id':'milestone', 'description':'body'})
+    data = ticket.templatetodic(s, {'milestone_id':'milestone'})
     if 'title' not in data:
         raise ValueError('You must write a title')
     if 'labels' in data:
         data['labels'] = [x.strip() for x in data['labels'].split(u',')]
-    if 'milestone' in data:
-        data['milestone'] = int(data['milestone'])
+    if 'assignee' in data and data['assignee'] == 'No one':
+        data['assignee'] = u''
     return data
     
 
@@ -189,7 +184,6 @@ def _request(rtype, url, params={}, data=None):
     if not 200 <= r.status_code < 300:
         raise requests.exceptions.HTTPError('[{0}] {1}'.format(r.status_code, r.url))
     return r
-
 
     
 def todatetime(dstr):

@@ -4,22 +4,33 @@
 import sys
 import blessings
 from gitticket import config
-from gitticket import display
 
 
 def show(opts):
     cfg = config.parseconfig()
-    tic = cfg['service'].issue(opts['number'])
-    print display.ticketdetail(tic)
+    r = cfg['service'].issue(opts['number'])
+    ticket, comments = None, None
+    # rがtupleの時は(ticket, comments)
+    if isinstance(r, tuple):
+        ticket, comments = r
+    else:
+        ticket = r
+    print ticket.format(cfg['format_show'] or ticket._show_format)
+    if not opts.get('nocomment', False):
+        if comments is None:
+            comments = cfg['service'].comments(opts['number'])
+        for comment in comments:
+            print comment.format(cfg['format_comment'])
 
 
 def list(opts):
     cfg = config.parseconfig()
-    r = cfg['service'].issues(opts)
-    if not r:
+    tickets = cfg['service'].issues(opts)
+    if not tickets:
         print u'No tickets.\n'
     else:
-        print display.ticketlist(r)
+        for tic in tickets:
+            print tic.format(cfg['format_list'])
 
 
 def add(opts):

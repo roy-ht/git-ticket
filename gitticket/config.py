@@ -47,6 +47,10 @@ def parseconfig():
         config['sslverify'] = False
     else:
         config['sslverify'] = True
+    # list and show formatting
+    config['format_list'] = gconfig.get('ticket.format.list', None)
+    config['format_show'] = gconfig.get('ticket.format.show', None)
+    config['format_comment'] = gconfig.get('ticket.format.comment', None)
     # github
     config['gtoken'] = gconfig.get('ticket.github.token', None)
     # bitbucket
@@ -78,6 +82,10 @@ def guess_service():
     u"""github, bitbucketなどサービスをoriginのurlから推測する"""
     gcfg = git()
     origin_url = gcfg.get('remote.origin.url', None)
+    if origin_url is None:
+        return None
+    if not isurl(origin_url):
+        origin_url = originalurl(origin_url)
     if 'github.com' in origin_url:
         return 'github'
     elif 'bitbucket.org' in origin_url:
@@ -95,10 +103,11 @@ def originalurl(s):
     urlkeys = filter(lambda x: x.startswith('url.'), gcfg.keys())
     if not urlkeys:
         return s # no alias
-    urlsettings = filter(None, (re.findall(ur'^url\.(.+)\.insteadof=(.+)', x) for x in urlkeys))
     # (url, alias)
-    for url, alias in urlsettings:
-        if s.startswith(alias):
+    for urlkey in urlkeys:
+        alias = gcfg[urlkey]
+        url = util.regex_extract(ur'^url\.(.+)\.insteadof', urlkey)
+        if url and s.startswith(alias):
             return s.replace(alias, url, 1)
     return s # not aliased?
 

@@ -9,6 +9,7 @@ def main():
     psr_help = subpsr.add_parser('help', help='Show this message.')
     
     psr_show = subpsr.add_parser('show', help='See detail of selected issue.')
+    psr_show.add_argument('-n', '--no-comment', dest='nocomment', help='Do not retrieve and show comments of an issue')
     psr_show.add_argument('number', metavar='num', type=int, help='an issue number')
     psr_list = subpsr.add_parser('list', help='Show open issues')
     psr_list.add_argument('-s', '--state', dest='state', help='select an state to display')

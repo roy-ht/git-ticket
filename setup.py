@@ -16,7 +16,7 @@ install_requires = ['distribute', 'blessings', 'requests', 'rauth']
 if sys.hexversion < 0x2070000:
     install_requires += ['argparse']
 setup(name="gitticket",
-      version='0.3.1',
+      version='0.4',
       description="Git and issue tracking system integration",
       long_description=read('README.rst'),
       author='Hiroyuki Tanaka',

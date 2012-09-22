@@ -13,13 +13,16 @@ from gitticket import util
 CONSUMER_KEY = 'Bq7A3PXEdgGeWy94VA'
 CONSUMER_SECRET = 'jWvtdn3tR4Q9vGn3USbQJZZHAnd7neXM'
 
-OAUTH_REQUEST = 'https://bitbucket.org/api/1.0/oauth/request_token'
-OAUTH_AUTH = 'https://bitbucket.org/api/1.0/oauth/authenticate'
-OAUTH_ACCESS = 'https://bitbucket.org/api/1.0/oauth/access_token'
+APIBASE = 'https://api.bitbucket.org/1.0'
+SITEBASE = 'https://bitbucket.org'
 
-BASEURL = 'https://api.bitbucket.org/1.0'
-ISSUEURL = 'https://bitbucket.org/{name}/{repo}/issue/{issueid}'
-REPO = os.path.join(BASEURL, 'repositories/{name}/{repo}')
+ISSUEURL = os.path.join(SITEBASE, '{name}/{repo}/issues/{issueid}')
+
+OAUTH_REQUEST = os.path.join(APIBASE, 'oauth/request_token')
+OAUTH_AUTH = os.path.join(APIBASE, 'oauth/authenticate')
+OAUTH_ACCESS = os.path.join(APIBASE, 'oauth/access_token')
+
+REPO = os.path.join(APIBASE, 'repositories/{name}/{repo}')
 ISSUES = os.path.join(REPO, 'issues')
 ISSUE = os.path.join(ISSUES, '{issueid}')
 ISSUE_COMMENTS = os.path.join(ISSUE, 'comments')
@@ -58,81 +61,53 @@ def issues(params={}):
     if params['sort'] == 'updated':
         params['sort'] = 'utc_last_updated'
     r = _request('get', url, params=params).json
-    tickets = []
-    for j in r['issues']:
-        create = todatetime(j['utc_created_on'])
-        update = todatetime(j['utc_last_updated'])
-        t = ticket.Ticket(id = j['local_id'],
-                          state = j['status'],
-                          title = j['title'],
-                          body = j['content'],
-                          created_by = nested_access(j, 'reported_by.username'),
-                          assign = nested_access(j, 'responsible.username'),
-                          commentnum = j['comment_count'],
-                          create = create,
-                          update = update)
-        tickets.append(t)
+    tickets = [_toticket(x) for x in r['issues']]
     return tickets
 
 
 def issue(number, params={}):
     cfg = config.parseconfig()
-    j = _request('get', ISSUE.format(issueid=number, **cfg), params=params).json
+    r = _request('get', ISSUE.format(issueid=number, **cfg), params=params).json
+    return _toticket(r)
+
+
+def comments(number, params={}):
+    cfg = config.parseconfig()
     cj = _request('get', ISSUE_COMMENTS.format(issueid=number, **cfg), {'limit':50}).json
     cj = [x for x in cj if x['content'] is not None]
     # commentは特殊。statusの変更がコメント化され、Web上では表示できるが、APIからは補足できない。
-    comments = [ticket.Comment({'id':x['comment_id'],
-                                'body':x['content'] or u'',
-                                'created_by':nested_access(x, 'author_info.username'),
-                                'create':todatetime(x['utc_created_on']),
-                                'update':todatetime(x['utc_updated_on']),
-                                }) for x in cj]
-    tic = ticket.Ticket(id = j['local_id'],
-                        state = j['status'],
-                        title = j['title'],
-                        body = j['content'],
-                        labels = [nested_access(j, 'metadata.kind')],
-                        priority = j['priority'],
-                        milestone = nested_access(j, 'metadata.milestone'),
-                        created_by = nested_access(j, 'reported_by.username'),
-                        assign = nested_access(j, 'responsible.username'),
-                        commentnum = j['comment_count'],
-                        create = todatetime(j['utc_created_on']),
-                        update = todatetime(j['utc_last_updated']),
-                        comments = comments)
-    return tic
+    comments = [ticket.Comment(number = x['comment_id'],
+                               body = x['content'],
+                               creator = nested_access(x, 'author_info.username'),
+                               created = _todatetime(x['utc_created_on']),
+                               updated = _todatetime(x['utc_updated_on'])) for x in cj]
+    return comments
+    
 
 
 def add(params={}):
-    template = ticket.template(('title', 'assign', 'labels', 'priority', 'milestone', 'description'),
-                               labels={'disp':'type', 'comment':u'Available types: bug, enhancement, proposal, task'},
-                               priority={'comment':u'Available priorities: trivial, minor, major, critical, blocker'})
+    comment = u'Available labels (select one): bug, enhancement, proposal, task\nAvailable priorities: trivial, minor, major, critical, blocker'
+    template = ticket.template(('title', 'assignee', 'labels', 'priority', 'milestone', 'version', 'component', 'body'), comment=comment)
     val = util.inputwitheditor(template)
+    if val == template:
+        return
     data = _issuedata_from_template(val)
     cfg = config.parseconfig()
     r = _request('post', ISSUES.format(**cfg), data=data, params=params).json
-    return {'number':r['local_id'], 'html_url':ISSUEURL.format(issueid=r['local_id'], **cfg)}
+    return {'number': r['local_id'], 'html_url': ISSUEURL.format(issueid=r['local_id'], **cfg)}
 
 
 def update(number, params={}):
     tic = issue(number, params)
-    template = ticket.template(('title', 'assign', 'labels', 'status', 'priority', 'milestone', 'description'),
-                               title={'default':tic.title},
-                               assign={'default':tic.assign if tic.assign != 'None' else u'',},
-                               labels={'disp':'type', 'comment':u'Available types: bug, enhancement, proposal, task',
-                                       'default':u', '.join(tic.labels)},
-                               status={'default':tic.state},
-                               priority={'comment':u'Available priorities: trivial, minor, major, critical, blocker',
-                                         'default':tic.priority},
-                               milestone={'default':tic.milestone or u''},
-                               description={'default':tic.body})
+    comment = u'Available labels (select one): bug, enhancement, proposal, task\nAvailable priorities: trivial, minor, major, critical, blocker'
+    template = ticket.template(('title', 'assignee', 'labels', 'state', 'priority', 'milestone', 'version', 'component', 'body'), tic, comment=comment)
     val = util.inputwitheditor(template)
     if val == template:
         return
     data = _issuedata_from_template(val)
     cfg = config.parseconfig()
     r = _request('put', ISSUE.format(issueid=number, **cfg), data=data, params=params).json
-    return {'number':r['local_id'], 'html_url':ISSUEURL.format(issueid=r['local_id'], **cfg)}
+    return {'number': r['local_id'], 'html_url': ISSUEURL.format(issueid=r['local_id'], **cfg)}
 
 
 def changestate(number, state):
@@ -156,8 +131,29 @@ def comment(number, params={}):
     return r
 
 
+def _toticket(d):
+    cfg = config.parseconfig()
+    j = dict(number = d['local_id'],
+             state = d['status'],
+             title = d['title'],
+             body = d['content'],
+             labels = nested_access(d, 'metadata.kind'),
+             priority = d['priority'],
+             milestone = nested_access(d, 'metadata.milestone'),
+             creator = nested_access(d, 'reported_by.username'),
+             creator_fullname = u' '.join((nested_access(d, 'reported_by.first_name'), nested_access(d, 'reported_by.last_name'))),
+             html_url = ISSUEURL.format(issueid=d['local_id'], **cfg),
+             assignee = nested_access(d, 'responsible.username'),
+             comments = d['comment_count'],
+             created = _todatetime(d['utc_created_on']),
+             updated = _todatetime(d['utc_last_updated']))
+    if 'responsible' in d:
+        j['assignee_fullname'] = u' '.join((nested_access(d, 'responsible.first_name'), nested_access(d, 'responsible.last_name')))
+    return ticket.Ticket(**j)
+
+
 def _issuedata_from_template(s):
-    data = ticket.templatetodic(s, {'assign':'responsible', 'type':'kind', 'description':'content'})
+    data = ticket.templatetodic(s, {'assignee':'responsible', 'labels':'kind', 'body':'content'})
     if 'title' not in data:
         raise ValueError('You must write a title')
     return data
@@ -180,6 +176,6 @@ def _request(rtype, url, params={}, data=None):
     return r
 
     
-def todatetime(dstr):
+def _todatetime(dstr):
     if isinstance(dstr, basestring):
         return datetime.datetime.strptime(dstr.replace('+00:00', 'UTC'), DATEFMT)

@@ -4,6 +4,7 @@ import datetime
 import json
 import requests
 import os
+import blessings
 from gitticket.config import nested_access
 from gitticket import config
 from gitticket import ticket
@@ -14,6 +15,7 @@ ASSIGNEES = os.path.join(REPO, 'assignees')
 STATUSES = os.path.join(REPO, 'issue_statuses.json')
 TRACKERS = os.path.join(REPO, 'trackers.json')
 MEMBERSHIPS = os.path.join(REPO, 'projects/{repo}/memberships.json')
+USERS = os.path.join(REPO, 'users.json')
 USER = os.path.join(REPO, 'users/{userid}.json')
 ISSUES = os.path.join(REPO, 'issues.json')
 ISSUE = os.path.join(REPO, 'issues/{issueid}.json')
@@ -26,64 +28,40 @@ def issues(params={}):
     if 'limit' not in params:
         params['limit'] = 50
     params['project_id'] = cfg['repo']
-    if 'state' in params:
-        avail_state = ('open', 'closed', '*')
-        if params['state'] not in avail_state:
+    params['status_id'] = params.pop('state', '*')
+    avail_state = ('open', 'closed', '*')
+    if params['status_id'] not in avail_state:
             raise ValueError(u'Invarid query: available status are ({0})'.format(u', '.join(avail_state)))
-        params['status_id'] = params.pop('state')
-    else:
-        params['status_id'] = '*'
     params['sort'] = params.pop('order', 'updated_on:desc')
-    if params['sort'] == 'updated':
-        params['sort'] = 'updated_on:desc'
     r = _request('get', ISSUES.format(**cfg), params=params).json
-    tickets = []
-    for j in r['issues']:
-        create = todatetime(j['created_on'])
-        update = todatetime(j['updated_on'])
-        t = ticket.Ticket(id = j['id'],
-                          state = nested_access(j, 'status.name'),
-                          title = j['subject'],
-                          body = j.get('description', ''),
-                          created_by = nested_access(j, 'author.name'),
-                          assign = nested_access(j, 'assigned_to.name'),
-                          create = create,
-                          update = update)
-        tickets.append(t)
+    tickets = [_toticket(x) for x in r['issues']]
     return tickets
+
     
 def issue(number, params={}):
     cfg = config.parseconfig()
     params['include'] = u','.join(('journals', 'children', 'changesets'))
-    j = _request('get', ISSUE.format(issueid=number, **cfg), params=params).json['issue']
-    comments = [ticket.Comment(_parse_journal(x)) for x in reversed(j['journals'])]
-    tic = ticket.Ticket(id = j['id'],
-                        state = nested_access(j, 'status.name'),
-                        priority = nested_access(j, 'priority.name'),
-                        title = j['subject'],
-                        labels = [nested_access(j, 'tracker.name')],
-                        body = j.get('description', u''),
-                        created_by = nested_access(j, 'author.name'),
-                        assign = nested_access(j, 'assigned_to.name'),
-                        comments = comments,
-                        create = todatetime(j['created_on']),
-                        update = todatetime(j['updated_on']))
-    # additional attributes
-    tic.priority_id = nested_access(j, 'priority.id')
+    r = _request('get', ISSUE.format(issueid=number, **cfg), params=params).json['issue']
+    comments = [ticket.Comment(**_parse_journal(x)) for x in reversed(r['journals'])]
+    tic = _toticket(r)
+    return tic, comments
 
-    return tic
-
-
+    
 def add(params={}):
-    asgns = u', '.join(u'{login}({name})'.format(login=x, name=y['name']) for x, y in assignees().items())
-    trks = u', '.join(trackers())
-    template = ticket.template(('title', 'assign', 'tracker', 'priority', 'status', 'description'),
-                               assign={'comment':u'Available assignee: {0}'.format(asgns)},
-                               tracker={'comment':u'Available trackers: {0}'.format(trks)},
-                               priority={'comment':u'Available priorities: 3-7 (low to high)'},
-                               status={'comment':u'Available statuses: {0}'.format(u', '.join(statuses()))},
-                               )
+    assigneedic = assignees()
+    trackerdic = trackers()
+    statusdic = statuses()
+    comment = u'\n'.join((u'Available assignees: {0}',
+                          u'Available labels: {1}',
+                          u'Available priorities: 3-7 (low to high)',
+                          u'Available states: {2}')
+                         ).format(u', '.join(x['login'] for x in assigneedic.itervalues()),
+                                  u', '.join(trackerdic.itervalues()),
+                                  u', '.join(statusdic.itervalues()))
+    template = ticket.template(('title', 'assignee', 'labels', 'priority', 'state', 'body'), comment=comment)
     val = util.inputwitheditor(template)
+    if val == template:
+        return
     data = _issuedata_from_template(val)
     cfg = config.parseconfig()
     data['issue']['project_id'] = cfg['repo']
@@ -92,26 +70,19 @@ def add(params={}):
 
 
 def update(number, params={}):
-    nees = assignees()
-    tic = issue(number, params)
-    asgns = u', '.join(u'{login}({name})'.format(login=x, name=y['name']) for x, y in nees.items())
-    trks = u', '.join(trackers())
-    # FIXME: この部分は表示名がかぶるとエラーになる恐れがある。
-    assignee = u'None'
-    if tic.assign != u'None':
-        cand = [x for x, y in nees.items() if y['name'] == tic.assign]
-        assignee = cand[0] if len(cand) == 1 else 'Not found'
-    template = ticket.template(('title', 'assign', 'tracker', 'priority', 'status', 'description', 'notes'),
-                               title={'default':tic.title},
-                               assign={'comment':u'Available assignee: {0}'.format(asgns),
-                                       'default':assignee},
-                               tracker={'comment':u'Available trackers: {0}'.format(trks),
-                                        'default':u', '.join(tic.labels)},
-                               priority={'comment':u'Available priorities: 3-7 (low to high)',
-                                         'default':str(tic.priority_id)},
-                               status={'comment':u'Available statuses: {0}'.format(u', '.join(statuses())),
-                                       'default':tic.state},
-                               description={'default':tic.body})
+    assigneedic = assignees()
+    trackerdic = trackers()
+    statusdic = statuses()
+    comment = u'\n'.join((u'Available assignees: {0}',
+                          u'Available labels: {1}',
+                          u'Available priorities: 3-7 (low to high)',
+                          u'Available states: {2}')
+                         ).format(u', '.join(x['login'] for x in assigneedic.itervalues()),
+                                  u', '.join(trackerdic.itervalues()),
+                                  u', '.join(statusdic.itervalues()))
+    tic, _ = issue(number, params)
+    tic.priority = tic.priority_id  # FIXME: monkey patch
+    template = ticket.template(('title', 'assignee', 'labels', 'priority', 'state', 'body', 'notes'), tic, comment=comment)
     val = util.inputwitheditor(template)
     if val == template:
         return
@@ -145,30 +116,42 @@ def comment(number, params={}):
     _request('put', ISSUE.format(issueid=number, **cfg), data=json.dumps(data), params=params, headers={'content-type': 'application/json'}).json
 
 
+@util.memoize
 def statuses():
     cfg = config.parseconfig()
     r = _request('get', STATUSES.format(**cfg)).json
-    return dict((x['name'], x['id']) for x in r['issue_statuses'])
+    return dict((x['id'], x['name']) for x in r['issue_statuses'])
 
 
+@util.memoize
 def trackers():
     cfg = config.parseconfig()
     r = _request('get', TRACKERS.format(**cfg)).json
-    return dict((x['name'], x['id']) for x in r['trackers'])
+    return dict((x['id'], x['name']) for x in r['trackers'])
 
 
+@util.memoize
 def memberships():
     cfg = config.parseconfig()
-    r = _request('get', MEMBERSHIPS.format(**cfg)).json
+    r = _request('get', MEMBERSHIPS.format(**cfg), params={'limit':100}).json
     return r['memberships']
 
 
+@util.memoize
+def users():
+    cfg = config.parseconfig()
+    r = _request('get', USERS.format(**cfg), params={'limit':100}).json
+    return r['user']
+
+
+@util.memoize
 def user(n):
     cfg = config.parseconfig()
     r = _request('get', USER.format(userid=n, **cfg)).json
     return r['user']
-    
 
+
+@util.memoize
 def assignees():
     r = memberships()
     nees = {}
@@ -176,34 +159,74 @@ def assignees():
         mainrole = min(member['roles'], key=lambda x: x['id'])  # idが小さいrole程権限がでかいと仮定
         if int(mainrole['id']) < 5:
             u = user(nested_access(member, 'user.id'))
-            nees[u['login']] = {'id':u['id'], 'name':nested_access(member, 'user.name')}
+            nees[u['id']] = {'login':u['login'], 'name':u['firstname'] + u' ' + u['lastname']}
     return nees
 
 
+def _toticket(d):
+    cfg = config.parseconfig()
+    j = dict(number = d['id'],
+             state = nested_access(d, 'status.name'),
+             priority = nested_access(d, 'priority.name'),
+             labels = nested_access(d, 'tracker.name'),
+             html_url = ISSUE_URL.format(issueid=d['id'], **cfg),
+             title = d['subject'],
+             body = d.get('description', None),
+             creator = user(nested_access(d, 'author.id'))['login'],
+             creator_fullname = nested_access(d, 'author.name'),
+             assignee_fullname = nested_access(d, 'assigned_to.name'),
+             created = todatetime(d['created_on']),
+             updated = todatetime(d['updated_on']))
+    if 'assigned_to' in d:
+        j['assignee'] = user(nested_access(d, 'assigned_to.id'))['login']
+    tic = ticket.Ticket(**j)
+    setattr(tic, 'priority_id', nested_access(d, 'priority.id'))  # Redmineにpriorityを取得するAPIがないためあとで参照しなければならない
+    return tic
+
+
 def _issuedata_from_template(s):
-    data = ticket.templatetodic(s, {'title':'subject', 'priority':'proirity_id'})    
+    data = ticket.templatetodic(s, {'title':'subject', 'priority':'priority_id', 'body':'description'})
     if 'subject' not in data:
         raise ValueError('You must write a title')
-    if 'assign' in data:
-        data['assigned_to_id'] = assignees()[data.pop('assign')]
-    if 'tracker' in data:
-        data['tracker_id'] = trackers()[data.pop('tracker')]
-    if 'status' in data:
-        data['status_id'] = statuses()[data.pop('status')]
-    return {'issue':data}
+    if 'assignee' in data:
+        for k, v in assignees().iteritems():
+            if data['assignee'] == v['login']:
+                data['assigned_to_id'] = k
+                break
+        else:
+            raise ValueError(u"assignee {0} not found".format(data['assignee']))
+    if 'priority_id' in data:
+        data['priority_id'] = int(data['priority_id'])
+    if 'labels' in data:
+        for tid, name in trackers().iteritems():
+            if data['labels'] == name:
+                data['tracker_id'] = tid
+                break
+        else:
+            raise ValueError(u"tracker {0} not found".format(data['tracker']))
+    if 'state' in data:
+        for sid, name in statuses().iteritems():
+            if data['state'] == name:
+                data['status_id'] = sid
+                break
+        else:
+            raise ValueError(u"state {0} not found".format(data['state']))
+    return {'issue': data}
 
 
 def _parse_journal(j):
+    term = blessings.Terminal()
     r = {}
-    r['id'] = j['id']
-    r['created_by'] = nested_access(j, 'user.name')
-    r['create'] = todatetime(j['created_on'])
+    r['number'] = j['id']
+    r['creator'] = nested_access(j, 'user.name')
+    r['created'] = todatetime(j['created_on'])
     r['body'] = u''
     # make body
     if 'notes' in j:
         r['body'] += j['notes'] + u'\n'
     r['body'] += u'\n'.join(u'{term.red}*{term.normal} ' + _parse_detail(x) for x in j['details'])
     r['body'] = r['body'].strip()
+    r['body'] = r['body'].format(term = term)
     return r
 
 def _parse_detail(j):

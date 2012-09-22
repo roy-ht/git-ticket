@@ -4,78 +4,138 @@ from datetime import datetime
 import time
 import calendar
 from gitticket import util
+import blessings
 
-class Comment(object):
-    def __init__(self, dct):
-        self.id = dct['id']
-        self.body = dct['body']
-        self.created_by = dct['created_by']
-        self.create = dct['create'] # datetime
-        # option value
-        self.update = dct.get('update', None) # datetime
 
-        self._format()
+g_term = blessings.Terminal()
 
-    def __getitem__(self, name):
-        return getattr(self, name)
+def _decorate(s, arg):
+    u"""特殊な属性を使って変数を装飾する
+    ^: 前に文字を付加
+    $: 後ろに文字を付加
+    b: blessingsのflavor
+    l, r, c: 左寄せ、右寄せ、中央寄せ
+    s: スペースを周りにつける
+    """
+    if arg.startswith('^'):
+        p = arg[1:]
+        s = u'{pre}{0}'.format(s, pre={'b':'[', 'e':']'}.get(p, p))
+    elif arg.startswith('$'):
+        p = arg[1:]
+        s = u'{0}{post}'.format(s, post={'b':'[', 'e':']'}.get(p, p))
+    elif arg.startswith('b'):
+        s = getattr(g_term, arg[1:])(u'{0}'.format(s))
+    elif arg.startswith(('l', 'r', 'c')):
+        s = u'{0:{dir}{num}}'.format(s, dir={'l':'<', 'r':'>', 'c':'^'}[arg[0]], num=int(arg[1:]))
+    elif arg.startswith('s'):
+        s = u' {0}'.format(s)
+    return s
 
-    def _format(self):
-        self.id = str(self.id)
-        self.create = humandate(self.create)
-        if self.update:
-            self.update = humandate(self.update)
-        
 
 class Ticket(object):
+    _list_format = u"{s[number__^#_bred]} ({s[updated__byellow]}) [{s[state___bcyan]}] {s.title} - {s[assignee__bmagenta]}"
+    _show_format = u'''
+    {s[number__^#_bred]} [{s[state__bcyan]}]{s[priority__bblue_^b_$e]}{s[labels__bgreen_^b_$e]}{s[milestone__bcyan_^b_$e]}{s[version__bblue_^b_$e]}{s[component__bgreen_^b_$e]} {s[pull_request__^<_$>_bred]}{s.title}
+    Created by{s[creator__bmagenta_s]}{s[creator_fullname__^(_$)_bmagenta_s]} at {s[created__byellow]}, updated at {s[updated__byellow]}
+   {s[assignee__bmagenta_s]}{s[assignee_fullname__^(_$)_bmagenta_s]} is assigned
+    link: {s[html_url]}
+
+{s[body]}
+'''
     def __init__(self, **dct):
-        self.id = dct['id']
-        self.state = dct['state']
-        self.title = dct['title']
-        self.created_by = dct['created_by']
-        self.assign = dct['assign']
-        self.create = dct['create'] # datetime
-        self.update = dct['update'] # datetime
-        self.body = dct['body'] or u''
-        # オプション
-        self.priority = dct.get('priority', None)
-        self.c = dct.get('commentnum', None)
-        self.closed = dct.get('closed', None) # datetime
-        self.labels = dct.get('labels', None) or []
-        self.milestone = dct.get('milestone', None) or {}
-        self.closed_by = dct.get('closed_by', None)
-        self.comments = dct.get('comments', None)
-        
-        self._format()
+        attributes = ['html_url', 'number', 'state', 'title', 'body', 'creator', 'creator_fullname', 'labels', 'assignee', 'assignee_fullname',
+                      'milestone', 'comments', 'pull_request', 'closed', 'created', 'updated', 'priority', 'version', 'component']
+        for attr in attributes:
+            if attr in dct and dct[attr] is not None:
+                setattr(self, attr, dct[attr])
+        self._init()  # reformatting
 
     def __getitem__(self, name):
-        return getattr(self, name)
+        if not isinstance(name, basestring):
+            raise TypeError('Ticket indices must be str, not integers')
+        if name.count('__') != 1:
+            try:
+                return getattr(self, name)
+            except AttributeError:
+                return u''
+        l = name.split(u'__')
+        key, args = l
+        args = args.split(u'_')
+        try:
+            r = getattr(self, key)
+        except AttributeError:
+            return u''
+        for arg in args:
+            r = _decorate(r, arg)
+        return r
 
-    def _format(self):
-        self.id = str(self.id)
-        if not self.assign:
-            self.assign = 'None'
-        if self.c is not None:
-            self.c = str(self.c)
-        self.create = humandate(self.create)
-        self.update = humandate(self.update)
-        self.closed = humandate(self.closed)
-        if not self.closed_by:
-            self.closed_by = 'None'
-        # self.milestone = str(self.milestone)
 
-    def tostr(self, name, width):
-        tgt = getattr(self, name)
-        if util.strwidth(tgt) > width:
-            while util.strwidth(tgt) + 2 > width:
-                tgt = tgt[:-1]
-            tgt += u'..'
-        return tgt + u' ' * (width - util.strwidth(tgt))
+    def _init(self):
+        if not hasattr(self, 'assignee'):
+            self.assignee = u'No one'
+        for attr in ('created', 'updated', 'closed'):
+            if hasattr(self, attr):
+                setattr(self, attr, humandate(getattr(self, attr)))
+        if hasattr(self, 'labels'):
+            self._rawlabels = self.labels
+            delattr(self, 'labels')
+            if self._rawlabels:
+                self.labels = u', '.join(self._rawlabels) if isinstance(self._rawlabels, (list, tuple)) else self._rawlabels
+
+    def format(self, template=None):
+        if template is None:
+            template = Ticket._list_format
+        # s == self, t == term
+        return template.format(s=self, t=g_term, hline=horline(), hhline=horline(u'='))
+
+
+class Comment(object):
+    _format = u'''Comment {s[number__^#_bgreen]} {s[created__bmagenta]} at {s[updated__byellow]}
+{hline}
+{s.body}
+'''
+    def __init__(self, **dct):
+        attributes = ['number', 'html_url', 'body', 'creator', 'creator_fullname', 'created', 'updated']
+        for attr in attributes:
+            if attr in dct and dct[attr] is not None:
+                setattr(self, attr, dct[attr])
+        self._init()
+
+    def __getitem__(self, name):
+        if name.count('__') != 1:
+            return getattr(self, name)
+        l = name.split(u'__')
+        key, args = l
+        args = args.split(u'_')
+        try:
+            r = getattr(self, key)
+        except AttributeError:
+            return u''
+        for arg in args:
+            r = _decorate(r, arg)
+        return r
+
+    def _init(self):
+        for attr in ('created', 'updated'):
+            if hasattr(self, attr):
+                setattr(self, attr, humandate(getattr(self, attr)))
+        if not hasattr(self, 'updated'):
+            self.updated = self.created
+        self.body = self.body.rstrip()
+
+    def format(self, template=None):
+        term = blessings.Terminal()
+        if template is None:
+            template = Comment._format
+        return template.format(s=self, t=term, hline=horline(), hhline=horline(u'='))
         
+
 def utctolocal(dt):
     u"""convert UTC+0000 datetime.datetime to local datetime.datetime
     """
     secs = calendar.timegm(dt.timetuple())
     return datetime(*time.localtime(secs)[:6])
+
 
 def humandate(dt):
     if not dt:
@@ -103,29 +163,34 @@ def humandate(dt):
         return 'just now'
 
 
-def template(disps, **kwargs):
-    u"""dispsに作る項目名、kwargs[name]['default']にデフォルトで表示する項目、kwargs[name]['comment']にコメント表示する文字列、
-    kwargs[name]['disp']に置き換える項目名を入れる
-    <name> title, assign, labels, milestone
+def template(disps, tic=None, comment=None):
+    u"""dispsに作る項目名、ticは既存のチケット、commentは付加コメント。
+    ticを与えると、入力フォームにticの内容を予め入力する。
     """
-    names = ('title', 'assign', 'labels', 'milestone', 'tracker', 'priority', 'status', 'description', 'notes')
+    names = ('number', 'state', 'title', 'creator', 'creator_fullname', 'labels', 'assignee', 'assignee_fullname',
+             'milestone', 'milestone_id', 'priority', 'version', 'component', 'body', 'notes')
     t = u''
-    for name in names:
-        if name in kwargs and 'comment' in kwargs[name]:
-            t += u'## {0}\n'.format(kwargs[name]['comment'])
+    # preset header
+    if tic is not None:
+        fstr = u'## ticket #{t.number} created by {t.creator}'
+        if hasattr(tic, 'creator_fullname'):
+            fstr += u' ({t.creator_fullname})'
+        t += fstr.format(t=tic) + u'\n'
+    # comments
+    t += u'\n'.join(u'## {0}'.format(x) for x in comment.split('\n')) + u'\n'
+    t += u'\n'
     for name in names:
         if name not in disps:
             continue
-        disp = name
-        default = u''
-        if name in kwargs:
-            disp = kwargs[name].get('disp', disp)
-            default = kwargs[name].get('default', default)
-        t += u':{0}: '.format(disp)
-        if name in ('description', 'notes'):
+        t += u':{0}: '.format(name)
+        if name in ('body', 'notes'):
             t += u'\n'
-        t += default + u'\n'
+        if tic is not None and hasattr(tic, name):
+            t += u'{0}'.format(getattr(tic, name))
+        t += u'\n'
+            
     return t
+
 
 def templatetodic(s, mapping={}):
     s = util.rmcomment(s)
@@ -138,7 +203,7 @@ def templatetodic(s, mapping={}):
             name = content[0].replace(u' ', u'_').lower()
             name = mapping.get(name, name)
             d[name] = content[1].strip(u' ')
-        else: # 継続行とみなす
+        elif name is not None: # 継続行とみなす
             d[name] += u'\n' + line.rstrip(u' ')
     for k, v in d.items():
         d[k] = v.strip('\n')
@@ -146,3 +211,13 @@ def templatetodic(s, mapping={}):
             del d[k]
     return d
     
+
+def termwidth():
+    term = blessings.Terminal()
+    if not term.width:
+        return 80
+    return term.width
+
+
+def horline(linestr=u'-'):
+    return linestr * termwidth()
