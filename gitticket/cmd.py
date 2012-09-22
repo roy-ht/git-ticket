@@ -9,10 +9,17 @@ from gitticket import display
 
 def show(opts):
     cfg = config.parseconfig()
-    ticket = cfg['service'].issue(opts['number'])
+    r = cfg['service'].issue(opts['number'])
+    ticket, comments = None, None
+    # rがtupleの時は(ticket, comments)
+    if isinstance(r, tuple):
+        ticket, comments = r
+    else:
+        ticket = r
     print ticket.format(cfg['format_show'] or ticket._show_format)
     if not opts.get('nocomment', False):
-        comments = cfg['service'].comments(opts['number'])
+        if comments is None:
+            comments = cfg['service'].comments(opts['number'])
         for comment in comments:
             print comment.format(cfg['format_comment'])
 

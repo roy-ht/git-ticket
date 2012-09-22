@@ -24,11 +24,11 @@ def _decorate(s, arg):
         p = arg[1:]
         s = u'{0}{post}'.format(s, post={'b':'[', 'e':']'}.get(p, p))
     elif arg.startswith('b'):
-        s = getattr(g_term, arg[1:])('{0}'.format(s))
+        s = getattr(g_term, arg[1:])(u'{0}'.format(s))
     elif arg.startswith(('l', 'r', 'c')):
         s = u'{0:{dir}{num}}'.format(s, dir={'l':'<', 'r':'>', 'c':'^'}[arg[0]], num=int(arg[1:]))
     elif arg.startswith('s'):
-        s = u' {0} '.format(s)
+        s = u' {0}'.format(s)
     return s
 
 
@@ -36,11 +36,11 @@ class Ticket(object):
     _list_format = u"{s[number__^#_bred]} ({s[updated__byellow]}) [{s[state___bcyan]}] {s.title} - {s[assignee__bmagenta]}"
     _show_format = u'''
     {s[number__^#_bred]} [{s[state__bcyan]}]{s[priority__bblue_^b_$e]}{s[labels__bgreen_^b_$e]}{s[milestone__bcyan_^b_$e]}{s[version__bblue_^b_$e]}{s[component__bgreen_^b_$e]} {s[pull_request__^<_$>_bred]}{s.title}
-    Created by{s[creator__bmagenta_s]}{s[creator_fullname__^(_$)_bmagenta_s]}at {s[created__byellow]}, updated at {s[updated__byellow]}
-   {s[assignee__bmagenta_s]}{s[assignee_fullname__^(_$)_bmagenta_s]}is assigned
+    Created by{s[creator__bmagenta_s]}{s[creator_fullname__^(_$)_bmagenta_s]} at {s[created__byellow]}, updated at {s[updated__byellow]}
+   {s[assignee__bmagenta_s]}{s[assignee_fullname__^(_$)_bmagenta_s]} is assigned
     link: {s[html_url]}
 
-{s.body}
+{s[body]}
 '''
     def __init__(self, **dct):
         attributes = ['html_url', 'number', 'state', 'title', 'body', 'creator', 'creator_fullname', 'labels', 'assignee', 'assignee_fullname',

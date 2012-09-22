@@ -67,7 +67,12 @@ def issues(params={}):
 
 def issue(number, params={}):
     cfg = config.parseconfig()
-    j = _request('get', ISSUE.format(issueid=number, **cfg), params=params).json
+    r = _request('get', ISSUE.format(issueid=number, **cfg), params=params).json
+    return _toticket(r)
+
+
+def comments(number, params={}):
+    cfg = config.parseconfig()
     cj = _request('get', ISSUE_COMMENTS.format(issueid=number, **cfg), {'limit':50}).json
     cj = [x for x in cj if x['content'] is not None]
     # commentは特殊。statusの変更がコメント化され、Web上では表示できるが、APIからは補足できない。
@@ -76,40 +81,33 @@ def issue(number, params={}):
                                creator = nested_access(x, 'author_info.username'),
                                created = _todatetime(x['utc_created_on']),
                                updated = _todatetime(x['utc_updated_on'])) for x in cj]
-    tic = _toticket(j)
-    return tic, comments
+    return comments
+    
 
 
 def add(params={}):
-    template = ticket.template(('title', 'assign', 'labels', 'priority', 'milestone', 'description'),
-                               labels={'disp':'type', 'comment':u'Available types: bug, enhancement, proposal, task'},
-                               priority={'comment':u'Available priorities: trivial, minor, major, critical, blocker'})
+    comment = u'Available labels (select one): bug, enhancement, proposal, task\nAvailable priorities: trivial, minor, major, critical, blocker'
+    template = ticket.template(('title', 'assignee', 'labels', 'priority', 'milestone', 'version', 'component', 'body'), comment=comment)
     val = util.inputwitheditor(template)
+    if val == template:
+        return
     data = _issuedata_from_template(val)
     cfg = config.parseconfig()
     r = _request('post', ISSUES.format(**cfg), data=data, params=params).json
-    return {'number': r['local_id'], 'html_url': ISSUEURL.format(issueid=d['local_id'], **cfg)}
+    return {'number': r['local_id'], 'html_url': ISSUEURL.format(issueid=r['local_id'], **cfg)}
 
 
 def update(number, params={}):
     tic = issue(number, params)
-    template = ticket.template(('title', 'assign', 'labels', 'status', 'priority', 'milestone', 'description'),
-                               title={'default':tic.title},
-                               assign={'default':tic.assign if tic.assign != 'None' else u'',},
-                               labels={'disp':'type', 'comment':u'Available types: bug, enhancement, proposal, task',
-                                       'default':u', '.join(tic.labels)},
-                               status={'default':tic.state},
-                               priority={'comment':u'Available priorities: trivial, minor, major, critical, blocker',
-                                         'default':tic.priority},
-                               milestone={'default':tic.milestone or u''},
-                               description={'default':tic.body})
+    comment = u'Available labels (select one): bug, enhancement, proposal, task\nAvailable priorities: trivial, minor, major, critical, blocker'
+    template = ticket.template(('title', 'assignee', 'labels', 'state', 'priority', 'milestone', 'version', 'component', 'body'), tic, comment=comment)
     val = util.inputwitheditor(template)
     if val == template:
         return
     data = _issuedata_from_template(val)
     cfg = config.parseconfig()
     r = _request('put', ISSUE.format(issueid=number, **cfg), data=data, params=params).json
-    return {'number': r['local_id'], 'html_url': ISSUEURL.format(issueid=d['local_id'], **cfg)}
+    return {'number': r['local_id'], 'html_url': ISSUEURL.format(issueid=r['local_id'], **cfg)}
 
 
 def changestate(number, state):
@@ -155,7 +153,7 @@ def _toticket(d):
 
 
 def _issuedata_from_template(s):
-    data = ticket.templatetodic(s, {'assign':'responsible', 'type':'kind', 'description':'content'})
+    data = ticket.templatetodic(s, {'assignee':'responsible', 'labels':'kind', 'body':'content'})
     if 'title' not in data:
         raise ValueError('You must write a title')
     return data
