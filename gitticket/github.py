@@ -42,17 +42,17 @@ def issues(params={}):
         raise ValueError('Invarid query: available state are (open, closed)')
     if 'order' in params:
         params['sort'] = params.pop('order')
-    r = _request('get', url, params=params).json
+    r = _request('get', url, params=params)
     if 'message' in r:
         raise ValueError('Invarid query: {0}'.format(r['message']))
     tickets = [_toticket(x) for x in r]
     return tickets
 
-    
+
 def issue(number, params={}):
     cfg = config.parseconfig()
     url = ISSUE.format(issueid=number, **cfg)
-    r = _request('get', url, params=params).json
+    r = _request('get', url, params=params)
     if 'message' in r:
         raise ValueError('Invarid query: {0}'.format(r['message']))
     return _toticket(r)
@@ -60,7 +60,7 @@ def issue(number, params={}):
 
 def comments(number, params={}):
     cfg = config.parseconfig()
-    r = requests.get(ISSUE_COMMENTS.format(issueid=number, **cfg), params=params, verify=cfg['sslverify']).json
+    r = _request('get', ISSUE_COMMENTS.format(issueid=number, **cfg), params=params)
     if 'message' in r:
         raise ValueError('Invarid query: {0}'.format(r['message']))
     comments = [ticket.Comment(number = x['id'],
@@ -93,7 +93,7 @@ def _toticket(d):
     if nested_access(d, 'milestone.id'):
         t.milestone_id = nested_access(d, 'milestone.id')
     return t
-    
+
 
 def add(params={}):
     comment = 'Available assignees: {0}\nAvailable labels: {1}'.format(u', '.join(labels()), u', '.join(assignees()))
@@ -103,7 +103,7 @@ def add(params={}):
         return
     data = _issuedata_from_template(val)
     cfg = config.parseconfig()
-    r = _request('post', ISSUES.format(**cfg), data=json.dumps(data), params=params).json
+    r = _request('post', ISSUES.format(**cfg), data=json.dumps(data), params=params)
     if 'message' in r:
         raise ValueError('Request Error: {0}'.format(r['message']))
     else:
@@ -119,31 +119,31 @@ def update(number, params={}):
         return
     data = _issuedata_from_template(val)
     cfg = config.parseconfig()
-    r = _request('patch', ISSUE.format(issueid=number, **cfg), data=json.dumps(data), params=params).json
+    r = _request('patch', ISSUE.format(issueid=number, **cfg), data=json.dumps(data), params=params)
     if 'message' in r:
         raise ValueError('Request Error: {0}'.format(r['message']))
     else:
         return r
 
-    
+
 def changestate(number, state):
     if state not in ('open', 'closed'):
         raise ValueError('Unknown state: {0}'.format(state))
     data = {'state': state}
     cfg = config.parseconfig()
-    r = _request('patch', ISSUE.format(issueid=number, **cfg), data=json.dumps(data)).json
+    r = _request('patch', ISSUE.format(issueid=number, **cfg), data=json.dumps(data))
     if 'message' in r:
         raise ValueError('Request Error: {0}'.format(r['message']))
     else:
         return r
-    
+
 
 def commentto(number, params={}):
     template = """# comment below here\n"""
     val = util.inputwitheditor(template)
     data = {'body': util.rmcomment(val)}
     cfg = config.parseconfig()
-    r = _request('post', ISSUE_COMMENTS.format(issueid=number, **cfg), data=json.dumps(data), params=params).json
+    r = _request('post', ISSUE_COMMENTS.format(issueid=number, **cfg), data=json.dumps(data), params=params)
     if 'message' in r:
         raise ValueError('Request Error: {0}'.format(r['message']))
     else:
@@ -151,13 +151,13 @@ def commentto(number, params={}):
 
 def assignees(params={}):
     cfg = config.parseconfig()
-    r = _request('get', ASSIGNEES.format(**cfg), params=params).json
+    r = _request('get', ASSIGNEES.format(**cfg), params=params)
     return [x['login'] for x in r]
 
 
 def labels(params={}):
     cfg = config.parseconfig()
-    r = _request('get', LABELS.format(**cfg), params=params).json
+    r = _request('get', LABELS.format(**cfg), params=params)
     return [x['name'] for x in r]
 
 
@@ -170,7 +170,7 @@ def _issuedata_from_template(s):
     if 'assignee' in data and data['assignee'] == 'No one':
         data['assignee'] = u''
     return data
-    
+
 
 def _request(rtype, url, params={}, data=None):
     cfg = config.parseconfig()
@@ -183,9 +183,9 @@ def _request(rtype, url, params={}, data=None):
         r = getattr(requests, rtype)(url, params=params, verify=cfg['sslverify'])
     if not 200 <= r.status_code < 300:
         raise requests.exceptions.HTTPError('[{0}] {1}'.format(r.status_code, r.url))
-    return r
+    return r.json
 
-    
+
 def todatetime(dstr):
     if isinstance(dstr, basestring):
         return datetime.datetime.strptime(dstr.replace('Z', 'UTC'), DATEFMT)
