@@ -43,8 +43,6 @@ def issues(params={}):
     if 'order' in params:
         params['sort'] = params.pop('order')
     r = _request('get', url, params=params)
-    if 'message' in r:
-        raise ValueError('Invarid query: {0}'.format(r['message']))
     tickets = [_toticket(x) for x in r]
     return tickets
 
@@ -53,16 +51,12 @@ def issue(number, params={}):
     cfg = config.parseconfig()
     url = ISSUE.format(issueid=number, **cfg)
     r = _request('get', url, params=params)
-    if 'message' in r:
-        raise ValueError('Invarid query: {0}'.format(r['message']))
     return _toticket(r)
 
 
 def comments(number, params={}):
     cfg = config.parseconfig()
     r = _request('get', ISSUE_COMMENTS.format(issueid=number, **cfg), params=params)
-    if 'message' in r:
-        raise ValueError('Invarid query: {0}'.format(r['message']))
     comments = [ticket.Comment(number = x['id'],
                                body = x['body'],
                                html_url = x['html_url'],
@@ -104,10 +98,7 @@ def add(params={}):
     data = _issuedata_from_template(val)
     cfg = config.parseconfig()
     r = _request('post', ISSUES.format(**cfg), data=json.dumps(data), params=params)
-    if 'message' in r:
-        raise ValueError('Request Error: {0}'.format(r['message']))
-    else:
-        return r
+    return r
 
 
 def update(number, params={}):
@@ -120,10 +111,7 @@ def update(number, params={}):
     data = _issuedata_from_template(val)
     cfg = config.parseconfig()
     r = _request('patch', ISSUE.format(issueid=number, **cfg), data=json.dumps(data), params=params)
-    if 'message' in r:
-        raise ValueError('Request Error: {0}'.format(r['message']))
-    else:
-        return r
+    return r
 
 
 def changestate(number, state):
@@ -131,11 +119,7 @@ def changestate(number, state):
         raise ValueError('Unknown state: {0}'.format(state))
     data = {'state': state}
     cfg = config.parseconfig()
-    r = _request('patch', ISSUE.format(issueid=number, **cfg), data=json.dumps(data))
-    if 'message' in r:
-        raise ValueError('Request Error: {0}'.format(r['message']))
-    else:
-        return r
+    _request('patch', ISSUE.format(issueid=number, **cfg), data=json.dumps(data))
 
 
 def commentto(number, params={}):
@@ -143,11 +127,8 @@ def commentto(number, params={}):
     val = util.inputwitheditor(template)
     data = {'body': util.rmcomment(val)}
     cfg = config.parseconfig()
-    r = _request('post', ISSUE_COMMENTS.format(issueid=number, **cfg), data=json.dumps(data), params=params)
-    if 'message' in r:
-        raise ValueError('Request Error: {0}'.format(r['message']))
-    else:
-        return r
+    _request('post', ISSUE_COMMENTS.format(issueid=number, **cfg), data=json.dumps(data), params=params)
+
 
 def assignees(params={}):
     cfg = config.parseconfig()
@@ -183,6 +164,8 @@ def _request(rtype, url, params={}, data=None):
         r = getattr(requests, rtype)(url, params=params, verify=cfg['sslverify'])
     if not 200 <= r.status_code < 300:
         raise requests.exceptions.HTTPError('[{0}] {1}'.format(r.status_code, r.url))
+    if 'message' in r.json:
+        raise ValueError('Invarid query: {0}'.format(r['message']))
     return r.json
 
 
