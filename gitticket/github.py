@@ -110,8 +110,7 @@ def update(number, params={}):
         return
     data = _issuedata_from_template(val)
     cfg = config.parseconfig()
-    r = _request('patch', ISSUE.format(issueid=number, **cfg), data=json.dumps(data), params=params)
-    return r
+    _request('patch', ISSUE.format(issueid=number, **cfg), data=json.dumps(data), params=params)
 
 
 def changestate(number, state):
