@@ -6,6 +6,16 @@ import blessings
 from gitticket import config
 
 
+def list(opts):
+    cfg = config.parseconfig()
+    tickets = cfg['service'].issues(opts)
+    if not tickets:
+        print u'No tickets.\n'
+    else:
+        for tic in tickets:
+            print tic.format(cfg['format_list'])
+
+
 def show(opts):
     cfg = config.parseconfig()
     r = cfg['service'].issue(opts['number'])
@@ -23,21 +33,24 @@ def show(opts):
             print comment.format(cfg['format_comment'])
 
 
-def list(opts):
-    cfg = config.parseconfig()
-    tickets = cfg['service'].issues(opts)
-    if not tickets:
-        print u'No tickets.\n'
-    else:
-        for tic in tickets:
-            print tic.format(cfg['format_list'])
-
-
 def add(opts):
     cfg = config.parseconfig()
     r = cfg['service'].add()
-    term = blessings.Terminal()
-    print u'Added {term.green}#{0}{term.normal}\nURL: {1}\n'.format(r['number'], r['html_url'], term=term)
+    if r is None:
+        print u'Abort. Canceled to add a ticket for some reason.'
+    else:
+        term = blessings.Terminal()
+        print u'Added {term.green}#{0}{term.normal}\nURL: {1}\n'.format(r['number'], r['html_url'], term=term)
+
+
+def update(opts):
+    cfg = config.parseconfig()
+    r = cfg['service'].update(opts['number'])
+    if r is None:
+        print u'Abort. Canceled to update a ticket for some reason.'
+    else:
+        term = blessings.Terminal()
+        print u'Ticket {term.green}#{0} was successfully updated.'.format(opts['number'], term=term)
 
 
 def close(opts):
@@ -45,11 +58,6 @@ def close(opts):
     if not opts['nocomment']:
         cfg['service'].commentto(opts['number'])
     cfg['service'].changestate(opts['number'], 'closed')
-
-
-def update(opts):
-    cfg = config.parseconfig()
-    cfg['service'].update(opts['number'])
 
 
 def comment(opts):
