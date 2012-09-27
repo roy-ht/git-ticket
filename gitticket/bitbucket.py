@@ -122,7 +122,7 @@ def changestate(number, state):
     return {'number':r['local_id'], 'html_url':ISSUEURL.format(issueid=r['local_id'], **cfg)}
 
 
-def comment(number, params={}):
+def commentto(number, params={}):
     template = """# comment below here\n"""
     val = util.inputwitheditor(template)
     data = {'content': util.rmcomment(val)}

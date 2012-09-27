@@ -106,9 +106,9 @@ def changestate(number, state):
     cfg = config.parseconfig()
     r = _request('put', ISSUE.format(issueid=number, **cfg), data=json.dumps(data), headers={'content-type': 'application/json'})
     return r.json
-    
 
-def comment(number, params={}):
+
+def commentto(number, params={}):
     template = """# comment below here\n"""
     val = util.inputwitheditor(template)
     data = {'notes': util.rmcomment(val)}

@@ -43,7 +43,7 @@ def add(opts):
 def close(opts):
     cfg = config.parseconfig()
     if not opts['nocomment']:
-        cfg['service'].comment(opts['number'])
+        cfg['service'].commentto(opts['number'])
     cfg['service'].changestate(opts['number'], 'closed')
 
 
@@ -54,7 +54,7 @@ def update(opts):
 
 def comment(opts):
     cfg = config.parseconfig()
-    cfg['service'].comment(opts['number'])
+    cfg['service'].commentto(opts['number'])
 
 
 def github_auth(opts):
