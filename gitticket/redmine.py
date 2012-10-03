@@ -88,8 +88,7 @@ def update(number, params={}):
         return
     data = _issuedata_from_template(val)
     cfg = config.parseconfig()
-    r = _request('put', ISSUE.format(issueid=number, **cfg), data=json.dumps(data), params=params, headers={'content-type': 'application/json'})
-    return r
+    _request('put', ISSUE.format(issueid=number, **cfg), data=json.dumps(data), params=params, headers={'content-type': 'application/json'})
 
 
 def changestate(number, state):

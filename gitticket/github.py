@@ -59,7 +59,6 @@ def comments(number, params={}):
     r = _request('get', ISSUE_COMMENTS.format(issueid=number, **cfg), params=params)
     comments = [ticket.Comment(number = x['id'],
                                body = x['body'],
-                               html_url = x['html_url'],
                                creator = nested_access(x, 'user.login'),
                                created = todatetime(x['created_at']),
                                updated = todatetime(x['updated_at'])) for x in r]
