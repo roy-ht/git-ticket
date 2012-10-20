@@ -228,10 +228,12 @@ def _parse_journal(j):
     return r
 
 def _parse_detail(j):
-    if 'old_value' in j:
+    if 'old_value' in j and 'new_value' in j:
         if j['name'] == 'description':
             return u'Update {{term.bold}}{name}{{term.normal}}'.format(**j)
         return u'Change {{term.bold}}{name}{{term.normal}} from {{term.cyan}}{old_value}{{term.normal}} to {{term.cyan}}{new_value}{{term.normal}}'.format(**j)
+    elif 'old_value' in j:
+        return u'Delete {{term.bold}}{name}{{term.normal}}: {{term.cyan}}{old_value}{{term.normal}}'.format(**j)
     else:
         return u'Add {{term.bold}}{name}{{term.normal}}'.format(**j)
 
