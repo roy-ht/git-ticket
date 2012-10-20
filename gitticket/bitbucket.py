@@ -60,20 +60,20 @@ def issues(params={}):
     params['sort'] = params.pop('order', 'utc_last_updated')
     if params['sort'] == 'updated':
         params['sort'] = 'utc_last_updated'
-    r = _request('get', url, params=params).json
+    r = _request('get', url, params=params)
     tickets = [_toticket(x) for x in r['issues']]
     return tickets
 
 
 def issue(number, params={}):
     cfg = config.parseconfig()
-    r = _request('get', ISSUE.format(issueid=number, **cfg), params=params).json
+    r = _request('get', ISSUE.format(issueid=number, **cfg), params=params)
     return _toticket(r)
 
 
 def comments(number, params={}):
     cfg = config.parseconfig()
-    cj = _request('get', ISSUE_COMMENTS.format(issueid=number, **cfg), {'limit':50}).json
+    cj = _request('get', ISSUE_COMMENTS.format(issueid=number, **cfg), {'limit':50})
     cj = [x for x in cj if x['content'] is not None]
     # commentは特殊。statusの変更がコメント化され、Web上では表示できるが、APIからは補足できない。
     comments = [ticket.Comment(number = x['comment_id'],
@@ -82,7 +82,7 @@ def comments(number, params={}):
                                created = _todatetime(x['utc_created_on']),
                                updated = _todatetime(x['utc_updated_on'])) for x in cj]
     return comments
-    
+
 
 
 def add(params={}):
@@ -93,7 +93,7 @@ def add(params={}):
         return
     data = _issuedata_from_template(val)
     cfg = config.parseconfig()
-    r = _request('post', ISSUES.format(**cfg), data=data, params=params).json
+    r = _request('post', ISSUES.format(**cfg), data=data, params=params)
     return {'number': r['local_id'], 'html_url': ISSUEURL.format(issueid=r['local_id'], **cfg)}
 
 
@@ -106,8 +106,7 @@ def update(number, params={}):
         return
     data = _issuedata_from_template(val)
     cfg = config.parseconfig()
-    r = _request('put', ISSUE.format(issueid=number, **cfg), data=data, params=params).json
-    return {'number': r['local_id'], 'html_url': ISSUEURL.format(issueid=r['local_id'], **cfg)}
+    _request('put', ISSUE.format(issueid=number, **cfg), data=data, params=params)
 
 
 def changestate(number, state):
@@ -118,17 +117,15 @@ def changestate(number, state):
         raise ValueError('Invarid query: available state are ({0})'.format(u', '.join(avail_states)))
     data = {'status': state}
     cfg = config.parseconfig()
-    r = _request('put', ISSUE.format(issueid=number, **cfg), data=data).json
-    return {'number':r['local_id'], 'html_url':ISSUEURL.format(issueid=r['local_id'], **cfg)}
+    _request('put', ISSUE.format(issueid=number, **cfg), data=data)
 
 
-def comment(number, params={}):
+def commentto(number, params={}):
     template = """# comment below here\n"""
     val = util.inputwitheditor(template)
     data = {'content': util.rmcomment(val)}
     cfg = config.parseconfig()
-    r = _request('post', ISSUE_COMMENTS.format(issueid=number, **cfg), data=data).json
-    return r
+    _request('post', ISSUE_COMMENTS.format(issueid=number, **cfg), data=data)
 
 
 def _toticket(d):
@@ -157,7 +154,7 @@ def _issuedata_from_template(s):
     if 'title' not in data:
         raise ValueError('You must write a title')
     return data
-    
+
 
 def _request(rtype, url, params={}, data=None):
     cfg = config.parseconfig()
@@ -173,9 +170,9 @@ def _request(rtype, url, params={}, data=None):
         r = getattr(session, rtype)(url, params=params)
     if not 200 <= r.status_code < 300:
         raise requests.exceptions.HTTPError('[{0}] {1}'.format(r.status_code, r.url))
-    return r
+    return r.json
 
-    
+
 def _todatetime(dstr):
     if isinstance(dstr, basestring):
         return datetime.datetime.strptime(dstr.replace('+00:00', 'UTC'), DATEFMT)

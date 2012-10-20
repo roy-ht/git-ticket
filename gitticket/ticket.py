@@ -128,7 +128,7 @@ class Comment(object):
         if template is None:
             template = Comment._format
         return template.format(s=self, t=term, hline=horline(), hhline=horline(u'='))
-        
+
 
 def utctolocal(dt):
     u"""convert UTC+0000 datetime.datetime to local datetime.datetime

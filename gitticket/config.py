@@ -33,7 +33,7 @@ def parseconfig():
     gconfig = git()
     config = {}
     # basic information
-    config['name'] = gconfig.get('ticket.name', gconfig.get('user.name', None)) or sys.exit('Please set ticket.name or user.name to git config file')
+    config['name'] = gconfig.get('ticket.name', gconfig.get('user.name', None))
     config['repo'] = gconfig.get('ticket.repo', None) or guess_repo_name()
     from gitticket import github, bitbucket, redmine
     config['service_name'] = gconfig.get('ticket.service', None) or guess_service()
@@ -62,7 +62,24 @@ def parseconfig():
         config['rurl'] = config['rurl'].rstrip(u'/')
     config['rpassword'] = gconfig.get('ticket.redmine.password', None)
     config['rtoken'] = gconfig.get('ticket.redmine.token', None)
+    verify(config)
     return config
+
+
+def verify(cfg):
+    """Check if configuration values are valid."""
+    if not cfg['service_name']:
+        raise ValueError("Can't guess a service. Try 'git config ticket.service [github|bitbucket|redmine]'")
+    if cfg['service_name'] not in ('github', 'bitbucket', 'redmine'):
+        raise ValueError(u"{0} is a unknown service. You must choose a service from github, bitbucket, and redmine")
+    if not cfg['repo']:
+        raise ValueError("Can't guess a repository name. Try 'git config ticket.repo <repository_name>'")
+    # nameは何かしらあるだろうけど、gitのuser.nameが設定されていないという万一のことがある
+    if not cfg['name']:
+        raise ValueError("You must set your account name to ticket.name or user.name. Try 'git config ticket.name <your_account_name>'")
+    if cfg['service_name'] == 'redmine':
+        if not cfg['rurl']:
+            raise ValueError(u"You must set a URL of your redmine. Try 'git config ticket.redmine.url <redmine_url>'")
 
 
 def guess_repo_name():
@@ -75,7 +92,10 @@ def guess_repo_name():
         if len(r) == 2:
             return r[1].replace('.git', '')
     # originが見つからなかったら、ディレクトリ名にする
-    return os.path.basename(gitdir())
+    gdir = gitdir() # gitリポジトリ外の場合にはNone
+    if gitdir:
+        gdir = os.path.basename(gdir)
+    return gdir
 
 
 def guess_service():

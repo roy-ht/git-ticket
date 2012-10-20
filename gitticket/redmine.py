@@ -33,20 +33,20 @@ def issues(params={}):
     if params['status_id'] not in avail_state:
             raise ValueError(u'Invarid query: available status are ({0})'.format(u', '.join(avail_state)))
     params['sort'] = params.pop('order', 'updated_on:desc')
-    r = _request('get', ISSUES.format(**cfg), params=params).json
+    r = _request('get', ISSUES.format(**cfg), params=params)
     tickets = [_toticket(x) for x in r['issues']]
     return tickets
 
-    
+
 def issue(number, params={}):
     cfg = config.parseconfig()
     params['include'] = u','.join(('journals', 'children', 'changesets'))
-    r = _request('get', ISSUE.format(issueid=number, **cfg), params=params).json['issue']
+    r = _request('get', ISSUE.format(issueid=number, **cfg), params=params)['issue']
     comments = [ticket.Comment(**_parse_journal(x)) for x in reversed(r['journals'])]
     tic = _toticket(r)
     return tic, comments
 
-    
+
 def add(params={}):
     assigneedic = assignees()
     trackerdic = trackers()
@@ -65,7 +65,7 @@ def add(params={}):
     data = _issuedata_from_template(val)
     cfg = config.parseconfig()
     data['issue']['project_id'] = cfg['repo']
-    r = _request('post', ISSUES.format(**cfg), data=json.dumps(data), params=params, headers={'content-type': 'application/json'}).json['issue']
+    r = _request('post', ISSUES.format(**cfg), data=json.dumps(data), params=params, headers={'content-type': 'application/json'})['issue']
     return {'number':r['id'], 'html_url':ISSUE_URL.format(issueid=r['id'], **cfg)}
 
 
@@ -88,8 +88,7 @@ def update(number, params={}):
         return
     data = _issuedata_from_template(val)
     cfg = config.parseconfig()
-    r = _request('put', ISSUE.format(issueid=number, **cfg), data=json.dumps(data), params=params, headers={'content-type': 'application/json'}).json
-    return r
+    _request('put', ISSUE.format(issueid=number, **cfg), data=json.dumps(data), params=params, headers={'content-type': 'application/json'})
 
 
 def changestate(number, state):
@@ -104,50 +103,49 @@ def changestate(number, state):
                 raise ValueError(u'Invarid query: available status are ({0})'.format(u', '.join(avail_state)).encode('utf-8'))
     data = {'issue':{'status_id': avail_state[state]}}
     cfg = config.parseconfig()
-    r = _request('put', ISSUE.format(issueid=number, **cfg), data=json.dumps(data), headers={'content-type': 'application/json'})
-    return r.json
-    
+    _request('put', ISSUE.format(issueid=number, **cfg), data=json.dumps(data), headers={'content-type': 'application/json'})
 
-def comment(number, params={}):
+
+def commentto(number, params={}):
     template = """# comment below here\n"""
     val = util.inputwitheditor(template)
     data = {'notes': util.rmcomment(val)}
     cfg = config.parseconfig()
-    _request('put', ISSUE.format(issueid=number, **cfg), data=json.dumps(data), params=params, headers={'content-type': 'application/json'}).json
+    _request('put', ISSUE.format(issueid=number, **cfg), data=json.dumps(data), params=params, headers={'content-type': 'application/json'})
 
 
 @util.memoize
 def statuses():
     cfg = config.parseconfig()
-    r = _request('get', STATUSES.format(**cfg)).json
+    r = _request('get', STATUSES.format(**cfg))
     return dict((x['id'], x['name']) for x in r['issue_statuses'])
 
 
 @util.memoize
 def trackers():
     cfg = config.parseconfig()
-    r = _request('get', TRACKERS.format(**cfg)).json
+    r = _request('get', TRACKERS.format(**cfg))
     return dict((x['id'], x['name']) for x in r['trackers'])
 
 
 @util.memoize
 def memberships():
     cfg = config.parseconfig()
-    r = _request('get', MEMBERSHIPS.format(**cfg), params={'limit':100}).json
+    r = _request('get', MEMBERSHIPS.format(**cfg), params={'limit':100})
     return r['memberships']
 
 
 @util.memoize
 def users():
     cfg = config.parseconfig()
-    r = _request('get', USERS.format(**cfg), params={'limit':100}).json
+    r = _request('get', USERS.format(**cfg), params={'limit':100})
     return r['user']
 
 
 @util.memoize
 def user(n):
     cfg = config.parseconfig()
-    r = _request('get', USER.format(userid=n, **cfg)).json
+    r = _request('get', USER.format(userid=n, **cfg))
     return r['user']
 
 
@@ -175,8 +173,8 @@ def _toticket(d):
              creator = user(nested_access(d, 'author.id'))['login'],
              creator_fullname = nested_access(d, 'author.name'),
              assignee_fullname = nested_access(d, 'assigned_to.name'),
-             created = todatetime(d['created_on']),
-             updated = todatetime(d['updated_on']))
+             created = _todatetime(d['created_on']),
+             updated = _todatetime(d['updated_on']))
     if 'assigned_to' in d:
         j['assignee'] = user(nested_access(d, 'assigned_to.id'))['login']
     tic = ticket.Ticket(**j)
@@ -219,7 +217,7 @@ def _parse_journal(j):
     r = {}
     r['number'] = j['id']
     r['creator'] = nested_access(j, 'user.name')
-    r['created'] = todatetime(j['created_on'])
+    r['created'] = _todatetime(j['created_on'])
     r['body'] = u''
     # make body
     if 'notes' in j:
@@ -230,10 +228,12 @@ def _parse_journal(j):
     return r
 
 def _parse_detail(j):
-    if 'old_value' in j:
+    if 'old_value' in j and 'new_value' in j:
         if j['name'] == 'description':
             return u'Update {{term.bold}}{name}{{term.normal}}'.format(**j)
         return u'Change {{term.bold}}{name}{{term.normal}} from {{term.cyan}}{old_value}{{term.normal}} to {{term.cyan}}{new_value}{{term.normal}}'.format(**j)
+    elif 'old_value' in j:
+        return u'Delete {{term.bold}}{name}{{term.normal}}: {{term.cyan}}{old_value}{{term.normal}}'.format(**j)
     else:
         return u'Add {{term.bold}}{name}{{term.normal}}'.format(**j)
 
@@ -249,9 +249,9 @@ def _request(rtype, url, params={}, data=None, headers={}):
         r = getattr(requests, rtype)(url, params=params, headers=headers, auth=auth, verify=cfg['sslverify'])
     if not 200 <= r.status_code < 300:
         raise requests.exceptions.HTTPError('[{0}] {1}'.format(r.status_code, r.url))
-    return r
+    return r.json
 
 
-def todatetime(dstr):
+def _todatetime(dstr):
     if isinstance(dstr, basestring):
         return datetime.datetime.strptime(dstr.replace('Z', 'UTC'), DATEFMT)
