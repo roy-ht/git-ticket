@@ -118,6 +118,10 @@ close a ticket
 ReleaseNote
 -----------
 
+v0.4.1
+    * Updated: more error handlings.
+    * Fixed: #16 parse error of a Redmine's journal
+
 v0.4
     * New: display format of list, show, add, update command.
     * Fixed: #15 Automatic guessing of a ticket service was not functioned.
@@ -136,12 +140,11 @@ v0.3.1
 v0.3
     Initial release
 
-------------  
+------------
 What's Next?
 ------------
 
-* Add tests
-* Error messages
+* More tests
 * Documentation
 * git-flow integration
 
@@ -149,7 +152,7 @@ What's Next?
 License
 -------
 
-It is released under the MIT license. 
+It is released under the MIT license.
 
     Copyright (c) 2011 Hiroyuki Tanaka
     
