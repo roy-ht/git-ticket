@@ -5,8 +5,9 @@ def main():
     from gitticket import cmd
     psr = argparse.ArgumentParser(description='Welcome to git-ticket!!')
     subpsr = psr.add_subparsers(help='commands')
-    
     psr_help = subpsr.add_parser('help', help='Show this message.')
+    #
+    psr_show_config = subpsr.add_parser('show-config', help='See configurations.')
     #
     psr_show = subpsr.add_parser('show', help='See detail of selected issue.')
     psr_show.add_argument('-n', '--no-comment', dest='nocomment', help='Do not retrieve and show comments of an issue')
@@ -36,6 +37,7 @@ def main():
     psr_bitbucket_auth = subpsr.add_parser('bitbucket-authorize', help='')
     #
     psr_help.set_defaults(cmd=lambda x: psr.print_help())
+    psr_show_config.set_defaults(cmd=cmd.show_config)
     psr_github_auth.set_defaults(cmd=cmd.github_auth)
     psr_bitbucket_auth.set_defaults(cmd=cmd.bitbucket_auth)
     psr_show.set_defaults(cmd=cmd.show)

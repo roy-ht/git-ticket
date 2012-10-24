@@ -84,3 +84,19 @@ def bitbucket_auth(opts):
     print 'If you want to set global, type:'
     print 'git config --global ticket.bitbucket.token {0}'.format(r[0])
     print 'git config --global ticket.bitbucket.token-secret {0}'.format(r[1])
+
+
+def show_config(opts):
+    cfg = config.parseconfig(doverify=False)
+    print ('service: {c[service_name]}\n'
+           'username: {c[name]}\n'
+           'repository: {c[repo]}\n'
+           'sslverify: {c[sslverify]}').format(c=cfg)
+    if cfg.get('service_name', '') == 'github':
+        print 'github_token: {0}'.format(cfg['gtoken'])
+    elif cfg.get('service_name', '') == 'bitbucket':
+        print 'bitbucket_token: {0}'.format(cfg['btoken'])
+        print 'bitbucket_token_secret: {0}'.format(cfg['btoken_secret'])
+    elif cfg.get('service_name', '') == 'redmine':
+        print 'redmine_endpoint: {0}'.format(cfg['rurl'])
+        print 'redmine_token: {0}'.format(cfg['rtoken'])
