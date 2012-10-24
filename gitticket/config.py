@@ -94,7 +94,7 @@ def guess_repo_name():
             return r[1].replace('.git', '')
     # originが見つからなかったら、ディレクトリ名にする
     gdir = gitdir() # gitリポジトリ外の場合にはNone
-    if gitdir:
+    if gdir:
         gdir = os.path.basename(gdir)
     return gdir
 
