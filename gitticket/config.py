@@ -23,7 +23,7 @@ def gitdir():
 
 
 @util.memoize
-def parseconfig():
+def parseconfig(doverify=True):
     u"""Parse git config key-values and set for issue handling.
     name: ticket.name 優先、user.nameが次点
     repo: ticket.repo 優先、guess_repo_nameが次点 
@@ -62,7 +62,8 @@ def parseconfig():
         config['rurl'] = config['rurl'].rstrip(u'/')
     config['rpassword'] = gconfig.get('ticket.redmine.password', None)
     config['rtoken'] = gconfig.get('ticket.redmine.token', None)
-    verify(config)
+    if doverify:
+        verify(config)
     return config
 
 
