@@ -2,6 +2,7 @@
 # -*- coding:utf-8 -*-
 
 import sys
+import re
 import blessings
 from gitticket import config
 
@@ -63,6 +64,23 @@ def close(opts):
 def comment(opts):
     cfg = config.parseconfig()
     cfg['service'].commentto(opts['number'])
+
+
+def locals(opts):
+    # チケット番号を見つける
+    # id-xx, id/xx, idxx, #xxに対応
+    def find_ticket_number(s):
+        mo = re.search(r'(?:id[/-]|#)(\d+)', s)
+        if mo:
+            return int(mo.groups(1))
+        return None
+    cfg = config.parseconfig()
+    branches = config.git_branches()
+    local_issue_numbers = filter(None, (find_ticket_number(x) for x in branches))
+    for issue_number in local_issue_numbers:
+        r = cfg['service'].issue(issue_number)
+        ticket = r[0] if isinstance(r, tuple) else r
+        print ticket.format(cfg['format_list'])
 
 
 def github_auth(opts):

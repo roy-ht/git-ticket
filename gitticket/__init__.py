@@ -41,6 +41,9 @@ def main():
     psr_comment.add_argument('number', metavar='num', type=int, help='an issue number')
     psr_comment.set_defaults(cmd=cmd.comment)
     #
+    psr_locals = subpsr.add_parser('locals', help='Show issue list in your local branch')
+    psr_locals.set_defaults(cmd=cmd.locals)
+    #
     psr_github_auth = subpsr.add_parser('github-authorize', help='')
     psr_github_auth.set_defaults(cmd=cmd.github_auth)
     #

@@ -12,14 +12,21 @@ def git():
     return dict(x.split('=', 1) for x in filter(None, rawstrs))
 
 
+@util.memoize
 def is_inside_work_tree():
     return util.cmd_stdout(('git', 'rev-parse', '--is-inside-work-tree')) == 'true'
 
 
+@util.memoize
 def gitdir():
     if not is_inside_work_tree():
         return None
     return os.path.normpath(os.path.join(os.path.abspath(util.cmd_stdout(('git', 'rev-parse', '-q', '--git-dir'))), '..')) # .gitの一つ上
+
+
+@util.memoize
+def git_branches():
+    return [x.replace('* ', '').strip() for x in util.cmd_stdout(('git', 'branch')).split()]
 
 
 @util.memoize
