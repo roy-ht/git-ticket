@@ -4,6 +4,7 @@
 import sys
 import re
 import blessings
+import requests
 from gitticket import config
 
 
@@ -76,11 +77,14 @@ def locals(opts):
         return None
     cfg = config.parseconfig()
     branches = config.git_branches()
-    local_issue_numbers = filter(None, (find_ticket_number(x) for x in branches))
-    for issue_number in local_issue_numbers:
-        r = cfg['service'].issue(issue_number)
+    parsed_branches = filter(lambda x: x[0] is not None, ((find_ticket_number(x), x) for x in branches))
+    for issue_number, branch_name in parsed_branches:
+        try:
+            r = cfg['service'].issue(issue_number)
+        except requests.exceptions.HTTPError:
+            continue
         ticket = r[0] if isinstance(r, tuple) else r
-        print ticket.format(cfg['format_list'])
+        print u'({0})'.format(branch_name), ticket.format(cfg['format_list'])
 
 
 def github_auth(opts):

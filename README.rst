@@ -114,9 +114,23 @@ close a ticket
 
     git ticket close <issue id>
 
+List tickets in your local branch
+=================================
+
+The branch name should contains '#xx', 'id-xx', 'idxx' or 'id/xx', xx is a ticket number.
+
+::
+
+    git ticket locals
+
+
+
 -----------
 ReleaseNote
 -----------
+
+v0.5
+    * New: locals command
 
 v0.4.1
     * Updated: more error handlings.

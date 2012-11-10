@@ -7,6 +7,8 @@ import functools
 import os
 
 
+
+
 def strwidth(s):
     u"""
     >>> strwidth('hello')
