@@ -72,57 +72,26 @@ And some other settings::
 
 For Redmine service, you must set ticket.service=redmine.
 
-list a ticket
-=============
-
-::
-
-    git ticket list
-
-show detail
-===========
-
-::
-
-    git ticket show <issue id>
-
-add a ticket
+Simple usage
 ============
 
 ::
 
-    git ticket add
+    git ticket list               # list tickets
+    git ticket show <ticket id>   # show detail of the ticket
+    git ticket add                # add a ticket
+    git ticket update <issue id>  # update contents of the ticket
+    git ticket comment <issue id> # add comment to the ticket
+    git ticket close <issue id>   # close the ticket
 
-update a ticket
-===============
-
-::
-
-    git ticket update <issue id>
-
-comment to a ticket
-===================
-
-::
-
-    git ticket comment <issue id>
-
-close a ticket
-==============
-
-::
-
-    git ticket close <issue id>
+More coomand
+============
 
 List tickets in your local branch
-=================================
+---------------------------------
 
+"locals" command find a ticket id in your local branch name.
 The branch name should contains '#xx', 'id-xx', 'idxx' or 'id/xx', xx is a ticket number.
-
-::
-
-    git ticket locals
-
 
 
 -----------
