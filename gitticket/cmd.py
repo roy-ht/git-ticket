@@ -11,7 +11,7 @@ def list(opts):
     cfg = config.parseconfig()
     tickets = cfg['service'].issues(opts)
     if not tickets:
-        print u'No opened tickets.\n'
+        print u'No open tickets.\n'
     else:
         for tic in tickets:
             print tic.format(cfg['format_list'])
