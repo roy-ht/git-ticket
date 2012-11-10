@@ -17,7 +17,7 @@ def main():
     psr_show.add_argument('number', metavar='num', type=int, help='an issue number')
     psr_show.set_defaults(cmd=cmd.show)
     #
-    psr_list = subpsr.add_parser('list', help='Show issue list')
+    psr_list = subpsr.add_parser('list', help='Show open issue list')
     psr_list.add_argument('-s', '--state', dest='state', help='select an state to display')
     psr_list.add_argument('-a', '--assignee', help='filter by assignee')
     psr_list.add_argument('-o', '--order', choices=('created', 'updated', 'comments'), default='updated',
