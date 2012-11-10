@@ -72,7 +72,7 @@ def locals(opts):
     def find_ticket_number(s):
         mo = re.search(r'(?:id[/-]|#)(\d+)', s)
         if mo:
-            return int(mo.groups(1))
+            return int(mo.group(1))
         return None
     cfg = config.parseconfig()
     branches = config.git_branches()
