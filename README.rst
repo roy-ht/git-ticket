@@ -87,8 +87,9 @@ Simple usage
 More coomand
 ============
 
-List tickets in your local branch
----------------------------------
+::
+
+    git ticket locals
 
 "locals" command find a ticket id in your local branch name.
 The branch name should contains '#xx', 'id-xx', 'idxx' or 'id/xx', xx is a ticket number.
