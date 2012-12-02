@@ -93,15 +93,16 @@ def update(number, params={}):
 
 def changestate(number, state):
     avail_state = statuses()
-    if state not in avail_state:
+    state_map = {y:x for x, y in avail_state.iteritems()}
+    if state not in state_map:
         if state == u'closed':
-            if u'終了' in avail_state:
+            if u'終了' in state_map:
                 state = u'終了'
-            elif u'close' in avail_state:
+            elif u'close' in state_map:
                 state = u'close'
             else:
-                raise ValueError(u'Invarid query: available status are ({0})'.format(u', '.join(avail_state)).encode('utf-8'))
-    data = {'issue':{'status_id': avail_state[state]}}
+                raise ValueError(u'Invarid query: available status are ({0})'.format(u', '.join(state_map)).encode('utf-8'))
+    data = {'issue':{'status_id': state_map[state]}}
     cfg = config.parseconfig()
     _request('put', ISSUE.format(issueid=number, **cfg), data=json.dumps(data), headers={'content-type': 'application/json'})
 
