@@ -80,9 +80,9 @@ Simple usage
     git ticket list               # list tickets
     git ticket show <ticket id>   # show detail of the ticket
     git ticket add                # add a ticket
-    git ticket update <issue id>  # update contents of the ticket
-    git ticket comment <issue id> # add comment to the ticket
-    git ticket close <issue id>   # close the ticket
+    git ticket update <ticket id>  # update contents of the ticket
+    git ticket comment <ticket id> # add comment to the ticket
+    git ticket close <ticket id>   # close the ticket
 
 More coomand
 ============
@@ -90,9 +90,11 @@ More coomand
 ::
 
     git ticket locals
+    git ticket show-config
 
-"locals" command find a ticket id in your local branch name.
-The branch name should contains '#xx', 'id-xx', 'idxx' or 'id/xx', xx is a ticket number.
+* "locals" command find a ticket id in your local branch name.
+  The branch name should contains '#xx', 'id-xx', 'idxx' or 'id/xx', xx is a ticket number.
+* "show-config" command outputs your configurations.
 
 
 -----------
@@ -101,6 +103,8 @@ ReleaseNote
 
 v0.5
     * New: locals command
+    * New: show-config command
+    * Fixed: #17
 
 v0.4.1
     * Updated: more error handlings.
