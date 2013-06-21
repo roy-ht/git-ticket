@@ -171,7 +171,7 @@ def _request(rtype, url, params={}, data=None):
         r = getattr(session, rtype)(url, params=params)
     if not 200 <= r.status_code < 300:
         raise requests.exceptions.HTTPError('[{0}] {1}'.format(r.status_code, r.url))
-    return r.json
+    return r.json()
 
 
 def _todatetime(dstr):
