@@ -4,6 +4,9 @@ import subprocess as sp
 import tempfile
 import re
 import functools
+import os
+
+
 
 
 def strwidth(s):
@@ -21,7 +24,8 @@ def strwidth(s):
 
 
 def cmd_stdout(arglist):
-    return sp.Popen(arglist, stdout=sp.PIPE).communicate()[0].strip()
+    with open(os.devnull, 'w') as devnull:
+        return sp.Popen(arglist, stdout=sp.PIPE, stderr=devnull).communicate()[0].strip()
 
 
 def rmcomment(text):
@@ -64,13 +68,11 @@ def inputwitheditor(s):
     with open(tmpfile[1], 'w') as fo:
         fo.write(s)
     cmd_stdout(editor + [tmpfile[1]])
-    
     return open(tmpfile[1]).read().decode('utf-8')
 
 
 def memoize(obj):
     cache = obj.cache = {}
-
     @functools.wraps(obj)
     def memoizer(*args, **kwargs):
         if args not in cache:

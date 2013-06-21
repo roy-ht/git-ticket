@@ -72,51 +72,40 @@ And some other settings::
 
 For Redmine service, you must set ticket.service=redmine.
 
-list a ticket
-=============
-
-::
-
-    git ticket list
-
-show detail
-===========
-
-::
-
-    git ticket show <issue id>
-
-add a ticket
+Simple usage
 ============
 
 ::
 
-    git ticket add
+    git ticket list               # list tickets
+    git ticket show <ticket id>   # show detail of the ticket
+    git ticket add                # add a ticket
+    git ticket update <ticket id>  # update contents of the ticket
+    git ticket comment <ticket id> # add comment to the ticket
+    git ticket close <ticket id>   # close the ticket
 
-update a ticket
-===============
-
-::
-
-    git ticket update <issue id>
-
-comment to a ticket
-===================
+More coomand
+============
 
 ::
 
-    git ticket comment <issue id>
+    git ticket locals
+    git ticket show-config
 
-close a ticket
-==============
+* "locals" command find a ticket id in your local branch name.
+  The branch name should contains '#xx', 'id-xx', 'idxx' or 'id/xx', xx is a ticket number.
+* "show-config" command outputs your configurations.
 
-::
-
-    git ticket close <issue id>
 
 -----------
 ReleaseNote
 -----------
+
+v0.5
+    * New: locals command
+    * New: show-config command
+    * Fixed: #17
+    * Fixed: rauth.hook import error
 
 v0.4.1
     * Updated: more error handlings.
@@ -155,9 +144,9 @@ License
 It is released under the MIT license.
 
     Copyright (c) 2011 Hiroyuki Tanaka
-    
+
     Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-        
+
     The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-        
+
     THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.

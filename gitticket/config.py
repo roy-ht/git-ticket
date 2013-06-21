@@ -12,10 +12,12 @@ def git():
     return dict(x.split('=', 1) for x in filter(None, rawstrs))
 
 
+@util.memoize
 def is_inside_work_tree():
     return util.cmd_stdout(('git', 'rev-parse', '--is-inside-work-tree')) == 'true'
 
 
+@util.memoize
 def gitdir():
     if not is_inside_work_tree():
         return None
@@ -23,7 +25,12 @@ def gitdir():
 
 
 @util.memoize
-def parseconfig():
+def git_branches():
+    return [x.replace('* ', '').strip() for x in util.cmd_stdout(('git', 'branch')).split()]
+
+
+@util.memoize
+def parseconfig(doverify=True):
     u"""Parse git config key-values and set for issue handling.
     name: ticket.name 優先、user.nameが次点
     repo: ticket.repo 優先、guess_repo_nameが次点 
@@ -62,7 +69,8 @@ def parseconfig():
         config['rurl'] = config['rurl'].rstrip(u'/')
     config['rpassword'] = gconfig.get('ticket.redmine.password', None)
     config['rtoken'] = gconfig.get('ticket.redmine.token', None)
-    verify(config)
+    if doverify:
+        verify(config)
     return config
 
 
@@ -93,7 +101,7 @@ def guess_repo_name():
             return r[1].replace('.git', '')
     # originが見つからなかったら、ディレクトリ名にする
     gdir = gitdir() # gitリポジトリ外の場合にはNone
-    if gitdir:
+    if gdir:
         gdir = os.path.basename(gdir)
     return gdir
 

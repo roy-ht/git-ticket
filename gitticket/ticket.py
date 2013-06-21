@@ -15,7 +15,7 @@ def _decorate(s, arg):
     $: 後ろに文字を付加
     b: blessingsのflavor
     l, r, c: 左寄せ、右寄せ、中央寄せ
-    s: スペースを周りにつける
+    s: スペースを前につける
     """
     if arg.startswith('^'):
         p = arg[1:]
@@ -188,7 +188,6 @@ def template(disps, tic=None, comment=None):
         if tic is not None and hasattr(tic, name):
             t += u'{0}'.format(getattr(tic, name))
         t += u'\n'
-            
     return t
 
 
@@ -210,7 +209,7 @@ def templatetodic(s, mapping={}):
         if len(d[k]) == 0: # stringであることを暗に
             del d[k]
     return d
-    
+
 
 def termwidth():
     term = blessings.Terminal()

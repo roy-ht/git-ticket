@@ -2,7 +2,9 @@
 # -*- coding:utf-8 -*-
 
 import sys
+import re
 import blessings
+import requests
 from gitticket import config
 
 
@@ -10,7 +12,7 @@ def list(opts):
     cfg = config.parseconfig()
     tickets = cfg['service'].issues(opts)
     if not tickets:
-        print u'No tickets.\n'
+        print u'No open tickets.\n'
     else:
         for tic in tickets:
             print tic.format(cfg['format_list'])
@@ -65,6 +67,26 @@ def comment(opts):
     cfg['service'].commentto(opts['number'])
 
 
+def locals(opts):
+    # チケット番号を見つける
+    # id-xx, id/xx, idxx, #xxに対応
+    def find_ticket_number(s):
+        mo = re.search(r'(?:id[/-]|#)(\d+)', s)
+        if mo:
+            return int(mo.group(1))
+        return None
+    cfg = config.parseconfig()
+    branches = config.git_branches()
+    parsed_branches = filter(lambda x: x[0] is not None, ((find_ticket_number(x), x) for x in branches))
+    for issue_number, branch_name in parsed_branches:
+        try:
+            r = cfg['service'].issue(issue_number)
+        except requests.exceptions.HTTPError:
+            continue
+        ticket = r[0] if isinstance(r, tuple) else r
+        print u'({0})'.format(branch_name), ticket.format(cfg['format_list'])
+
+
 def github_auth(opts):
     import getpass
     from gitticket import github
@@ -84,3 +106,19 @@ def bitbucket_auth(opts):
     print 'If you want to set global, type:'
     print 'git config --global ticket.bitbucket.token {0}'.format(r[0])
     print 'git config --global ticket.bitbucket.token-secret {0}'.format(r[1])
+
+
+def show_config(opts):
+    cfg = config.parseconfig(doverify=False)
+    print ('service: {c[service_name]}\n'
+           'username: {c[name]}\n'
+           'repository: {c[repo]}\n'
+           'sslverify: {c[sslverify]}').format(c=cfg)
+    if cfg.get('service_name', '') == 'github':
+        print 'github_token: {0}'.format(cfg['gtoken'])
+    elif cfg.get('service_name', '') == 'bitbucket':
+        print 'bitbucket_token: {0}'.format(cfg['btoken'])
+        print 'bitbucket_token_secret: {0}'.format(cfg['btoken_secret'])
+    elif cfg.get('service_name', '') == 'redmine':
+        print 'redmine_endpoint: {0}'.format(cfg['rurl'])
+        print 'redmine_token: {0}'.format(cfg['rtoken'])

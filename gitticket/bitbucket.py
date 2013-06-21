@@ -4,7 +4,6 @@ import datetime
 import os
 import requests
 from rauth.service import OAuth1Service
-from rauth.hook import OAuth1Hook
 from gitticket.config import nested_access
 from gitticket import config
 from gitticket import ticket
@@ -160,9 +159,11 @@ def _request(rtype, url, params={}, data=None):
     cfg = config.parseconfig()
     session = requests
     if cfg['btoken'] and cfg['btoken_secret']:
-        oauth = OAuth1Hook(CONSUMER_KEY, CONSUMER_SECRET,
-                           access_token=cfg['btoken'], access_token_secret=cfg['btoken_secret'])
-        session = requests.session(hooks={'pre_request': oauth})
+        service = OAuth1Service(name='bitbucket', consumer_key=CONSUMER_KEY, consumer_secret=CONSUMER_SECRET,
+                            request_token_url=OAUTH_REQUEST,
+                            access_token_url=OAUTH_ACCESS,
+                            authorize_url=OAUTH_AUTH)
+        session = service.get_auth_session(cfg['btoken'], cfg['btoken_secret'])
     r = None
     if data:
         r = getattr(session, rtype)(url, data=data, params=params, verify=cfg['sslverify'])
