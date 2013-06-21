@@ -32,7 +32,7 @@ DATEFMT = "%Y-%m-%dT%H:%M:%S%Z"
 def authorize(name, pswd):
     cfg = config.parseconfig()
     r = requests.post(AUTH, data=json.dumps({'scopes':['repo'], 'note':'git-ticket'}), auth=(name, pswd), verify=cfg['sslverify'])
-    return r.json
+    return r.json()
 
 
 def issues(params={}):
@@ -162,9 +162,9 @@ def _request(rtype, url, params={}, data=None):
         r = getattr(requests, rtype)(url, params=params, verify=cfg['sslverify'])
     if not 200 <= r.status_code < 300:
         raise requests.exceptions.HTTPError('[{0}] {1}'.format(r.status_code, r.url))
-    if 'message' in r.json:
+    if 'message' in r.json():
         raise ValueError('Invarid query: {0}'.format(r['message']))
-    return r.json
+    return r.json()
 
 
 def todatetime(dstr):
