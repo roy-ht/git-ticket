@@ -35,6 +35,13 @@ or github(unstable)::
 
     pip install -e git+https://github.com/aflc/git-ticket.git#egg=git-ticket
 
+
+-------------
+Upgrade notes
+-------------
+
+If you have something errors, try ``pip install gitticket -U``
+
 -----
 Usage
 -----
@@ -100,6 +107,9 @@ More coomand
 -----------
 ReleaseNote
 -----------
+
+v0.5.1
+    * Fixed: support newer virsion of requests
 
 v0.5
     * New: locals command
